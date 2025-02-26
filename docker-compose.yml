@@ -1,0 +1,48 @@
+services: 
+  dhp-csp:
+    image: distributed_hhe_ppml
+    entrypoint: csp
+    command: 0.0.0.0:50052
+    tty: true 
+    ports:
+      - 50052:50052
+    expose:
+      - "50052"
+    volumes:
+      - /mnt/vol0/dhp/ciphers:/srv
+#    environment:
+#      - GRPC_DNS_RESOLVER=native
+    networks:
+      - dhp
+
+#  dhp-analyst:
+#    image: distributed_hhe_ppml
+#    entrypoint: analyst
+#    command: 0.0.0.0:50051 dhp-csp:50052
+#    tty: true 
+#    ports:
+#      - 50051:50051
+#    expose:
+#      - "50051"
+#    volumes:
+#      - /mnt/vol0/dhp/weights:/srv/weights 
+#    environment:
+#      - GRPC_DNS_RESOLVER=native
+#    networks:
+#      - dhp
+#
+#  dhp-user:
+#    image: distributed_hhe_ppml
+#    entrypoint: user 
+#    command: dhp-analyst:50051 dhp-csp:50052 /srv/data/Harpocrates_recordingwise_SIESTA_4percent/c000101_data.txt
+#    tty: true 
+#    volumes:
+#      - /mnt/vol0/dhp/data:/srv/data
+#    environment:
+#      - GRPC_DNS_RESOLVER=native
+#    networks:
+#      - dhp
+
+networks:
+  dhp:
+    driver: bridge
