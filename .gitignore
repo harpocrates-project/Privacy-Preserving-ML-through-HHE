@@ -367,3 +367,6 @@ libs/pasta3/
 *_hhe_binaryoutput.txt
 .analyst_id
 .analyst_keys
+
+# Docker env file
+.env

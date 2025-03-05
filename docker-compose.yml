@@ -1,48 +1,40 @@
 services: 
-  dhp-csp:
-    image: distributed_hhe_ppml
+  csp:
+    image: harpocrates/distributed_hhe_ppml
+    build:
+      context: .
+      network: host
     entrypoint: csp
-    command: 0.0.0.0:50052
+    command: ${CSP_HOST}:${CSP_PORT}
     tty: true 
+    network_mode: "host"
     ports:
-      - 50052:50052
+      - ${CSP_PORT}:${CSP_PORT}
     expose:
-      - "50052"
+      - ${CSP_PORT}
     volumes:
-      - /mnt/vol0/dhp/ciphers:/srv
-#    environment:
-#      - GRPC_DNS_RESOLVER=native
-    networks:
-      - dhp
+      - ${CSP_WORKDIR}:/srv
+    environment:
+      - CSP_HOST=${CSP_HOST}
+      - CSP_PORT=${CSP_PORT}
 
-#  dhp-analyst:
-#    image: distributed_hhe_ppml
-#    entrypoint: analyst
-#    command: 0.0.0.0:50051 dhp-csp:50052
-#    tty: true 
-#    ports:
-#      - 50051:50051
-#    expose:
-#      - "50051"
-#    volumes:
-#      - /mnt/vol0/dhp/weights:/srv/weights 
-#    environment:
-#      - GRPC_DNS_RESOLVER=native
-#    networks:
-#      - dhp
-#
-#  dhp-user:
-#    image: distributed_hhe_ppml
-#    entrypoint: user 
-#    command: dhp-analyst:50051 dhp-csp:50052 /srv/data/Harpocrates_recordingwise_SIESTA_4percent/c000101_data.txt
-#    tty: true 
-#    volumes:
-#      - /mnt/vol0/dhp/data:/srv/data
-#    environment:
-#      - GRPC_DNS_RESOLVER=native
-#    networks:
-#      - dhp
-
-networks:
-  dhp:
-    driver: bridge
+  analyst:
+    image: harpocrates/distributed_hhe_ppml
+    build:
+      context: .
+      network: host
+    entrypoint: analyst
+    command: ${ANALYST_HOST}:${ANALYST_PORT} ${CSP_HOST}:${CSP_PORT}
+    tty: true 
+    network_mode: "host"
+    ports:
+      - ${ANALYST_PORT}:${ANALYST_PORT}
+    expose:
+      - ${ANALYST_PORT}
+    volumes:
+      - ${ANALYST_WORKDIR}:/srv 
+    environment:
+      - ANALYST_HOST=${ANALYST_HOST}
+      - ANALYST_PORT=${ANALYST_PORT}
+      - CSP_HOST=${CSP_HOST}
+      - CSP_PORT=${CSP_PORT}
