@@ -20,22 +20,22 @@ bool CSPServiceAnalystClient::addPublicKeys(string analystUUID)
     request.mutable_pk()->set_length(size);
 
     // Analyst HE Relins keys 
-    size = analyst->getRelinKeysBytes(buffer);
+    size = analyst->getRelinKeyBytes(buffer);
     request.mutable_rk()->set_data(buffer, size);
     request.mutable_rk()->set_length(size);
 
     // Analyst HE Galois keys
-    size = analyst->getGaloisKeysBytes(buffer);
+    size = analyst->getGaloisKeyBytes(buffer);
     request.mutable_gk()->set_data(buffer, size);
     request.mutable_gk()->set_length(size);
 
     // CSP HE Relins keys
-    size = analyst->getCSPRelinKeysBytes(buffer);
+    size = analyst->getCSPRelinKeyBytes(buffer);
     request.mutable_csp_rk()->set_data(buffer, size);
     request.mutable_csp_rk()->set_length(size);
 
     // CSP HE Galois keys
-    size = analyst->getCSPGaloisKeysBytes(buffer);
+    size = analyst->getCSPGaloisKeyBytes(buffer);
     request.mutable_csp_gk()->set_data(buffer, size);
     request.mutable_csp_gk()->set_length(size);
 

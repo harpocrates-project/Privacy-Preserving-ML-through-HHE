@@ -28,7 +28,7 @@ void BaseAnalyst::setBatchEncoder()
 /** 
 Create a HE Secret key
 */
-void BaseAnalyst::setHESecretKey(KeyGenerator* analyst_keygen)
+void BaseAnalyst::setHESecretKey()
 {
     analyst_he_sk = analyst_keygen->secret_key();
 }
@@ -36,7 +36,7 @@ void BaseAnalyst::setHESecretKey(KeyGenerator* analyst_keygen)
 /**
 Create a HE Public key
 */
-void BaseAnalyst::setHEPublicKey(KeyGenerator* analyst_keygen)
+void BaseAnalyst::setHEPublicKey()
 {
     analyst_keygen->create_public_key(analyst_he_pk); 
 }   
@@ -44,7 +44,7 @@ void BaseAnalyst::setHEPublicKey(KeyGenerator* analyst_keygen)
 /** 
 Create HE Relin keys
 */
-void BaseAnalyst::setHERelinKeys(KeyGenerator* analyst_keygen)
+void BaseAnalyst::setHERelinKeys()
 {
     analyst_keygen->create_relin_keys(analyst_he_rk);
 }
@@ -52,7 +52,7 @@ void BaseAnalyst::setHERelinKeys(KeyGenerator* analyst_keygen)
 /** 
 Create HE Relin keys for CSP
 */
-void BaseAnalyst::setCSPHERelinKeys(KeyGenerator* analyst_keygen)
+void BaseAnalyst::setCSPHERelinKeys()
 {
     analyst_keygen->create_relin_keys(csp_he_rk);
 }
@@ -60,7 +60,7 @@ void BaseAnalyst::setCSPHERelinKeys(KeyGenerator* analyst_keygen)
 /** 
 Create HE Galois keys
 */
-void BaseAnalyst::setHEGaloisKeys(KeyGenerator* analyst_keygen)
+void BaseAnalyst::setHEGaloisKeys()
 {
     analyst_keygen->create_galois_keys(analyst_he_gk);  
 }
@@ -68,7 +68,7 @@ void BaseAnalyst::setHEGaloisKeys(KeyGenerator* analyst_keygen)
 /** 
 Create HE Galois keys for CSP
 */
-void BaseAnalyst::setCSPHEGaloisKeys(BatchEncoder* analyst_he_benc, KeyGenerator* analyst_keygen)
+void BaseAnalyst::setCSPHEGaloisKeys()
 {
     int inputLen = 300;
     // size_t num_block = inputLen / HHE.get_plain_size();
@@ -218,36 +218,160 @@ void BaseAnalyst::print_seal_bytes(seal_byte* buffer)
 /**
 Set up HE parameters
 */
-void BaseAnalyst::hEInitialization()
-{
-    // setter
-    setKeyGenerator();
-    setBatchEncoder();
-
-    // getter
-    analyst_keygen = getKeyGenerator();
-    analyst_he_benc = getBatchEncoder();
-}
+// void BaseAnalyst::hEInitialization()
+// {
+//     setKeyGenerator();
+//     setBatchEncoder();
+// }
 
 /**
 Create HE keys
 */
-void BaseAnalyst::generateHEKeys()
+void BaseAnalyst::generateHEKeys(const string& fileName)
 {
     cout << "Analyst constructs the HE context" << endl;
     print_parameters(*context);
 
     cout << "[Analyst] Creating HE keys, batch encoder, encryptor and evaluator from the context" << endl;
     
-    hEInitialization();
-    setHESecretKey(analyst_keygen); // analyst_he_sk
-    setHEPublicKey(analyst_keygen); // analyst_he_pk
-    setHERelinKeys(analyst_keygen); // analyst_he_rk
-    setHEGaloisKeys(analyst_keygen); // analyst_he_gk
+    //hEInitialization();
+    setHESecretKey(); // analyst_he_sk
+    setHEPublicKey(); // analyst_he_pk
+    setHERelinKeys(); // analyst_he_rk
+    setHEGaloisKeys(); // analyst_he_gk
 
-    setCSPHERelinKeys(analyst_keygen); // csp_he_rk
-    setCSPHEGaloisKeys(analyst_he_benc, analyst_keygen); // csp_he_gk
+    setCSPHERelinKeys(); // csp_he_rk
+    setCSPHEGaloisKeys(); // csp_he_gk
+
+    saveHEKeys(fileName);
 }
+
+
+/**
+ * Store the generated keys in a file.
+ */
+void BaseAnalyst::saveHEKeys(const string& fileName)
+{
+
+    cout << "[Analyst] Saving keys to file: " << fileName << endl;
+
+    ofstream outFile(fileName, ios::binary);
+    if (!outFile.is_open())
+    {
+        cerr << "[Analyst] Failed to open file: " << fileName << endl;
+        return;
+    }
+
+    seal_byte* keyBuffer;
+    int keySize;
+
+    keySize = getSecretKeyBytes(keyBuffer);
+    writeKeyToFile(outFile, keyBuffer, keySize);
+    
+    keySize = getPublicKeyBytes(keyBuffer);
+    writeKeyToFile(outFile, keyBuffer, keySize);
+    
+    keySize = getRelinKeyBytes(keyBuffer);
+    writeKeyToFile(outFile, keyBuffer, keySize);
+
+    keySize = getGaloisKeyBytes(keyBuffer);
+    writeKeyToFile(outFile, keyBuffer, keySize);
+
+    // CSP keys
+    keySize = getCSPRelinKeyBytes(keyBuffer);
+    writeKeyToFile(outFile, keyBuffer, keySize);
+
+    keySize = getCSPGaloisKeyBytes(keyBuffer);
+    writeKeyToFile(outFile, keyBuffer, keySize);
+
+    outFile.close();
+    cout << "Keys stored correctly in file" << endl;
+}
+
+
+void BaseAnalyst::writeKeyToFile(ofstream& outFile,  seal_byte* keyBuffer, int keySize) 
+{
+    outFile.write(reinterpret_cast<char*>(&keySize), sizeof(keySize));
+    outFile.write(reinterpret_cast<char*>(keyBuffer), keySize);
+    delete[] keyBuffer;
+}
+
+
+int BaseAnalyst::loadHEKeys(const string& fileName)
+{
+    cout << "[Analyst] Loading keys from file: " << fileName << endl;
+
+    ifstream inFile(fileName, ios::binary);
+    if (!inFile.is_open())
+    {
+        cerr << "[Analyst] Failed to open file: " << fileName << endl;
+        return -1;
+    }
+
+    seal_byte* keyBuffer;
+    int keySize;
+
+    readKeyFromFile(inFile, keyBuffer, keySize);
+    analyst_he_sk.load(*context, keyBuffer, keySize);
+    cout << "[Analyst] Loaded HE Secret key(size=" << keySize << ")" << endl;
+    delete[] keyBuffer;
+
+    readKeyFromFile(inFile, keyBuffer, keySize);
+    analyst_he_pk.load(*context, keyBuffer, keySize);
+    cout << "[Analyst] Loaded HE Public key(size=" << keySize << ")" << endl;
+    delete[] keyBuffer;
+
+    readKeyFromFile(inFile, keyBuffer, keySize);
+    analyst_he_rk.load(*context, keyBuffer, keySize);
+    cout << "[Analyst] Loaded HE Relin key(size=" << keySize << ")" << endl;
+    delete[] keyBuffer;
+
+    readKeyFromFile(inFile, keyBuffer, keySize);
+    analyst_he_gk.load(*context, keyBuffer, keySize);
+    cout << "[Analyst] Loaded HE Galois key(size=" << keySize << ")" << endl;
+    delete[] keyBuffer;
+
+    readKeyFromFile(inFile, keyBuffer, keySize);
+    csp_he_rk.load(*context, keyBuffer, keySize);
+    cout << "[Analyst] Loaded CSP Relin key(size=" << keySize << ")" << endl;
+    delete[] keyBuffer;
+
+    readKeyFromFile(inFile, keyBuffer, keySize);
+    csp_he_gk.load(*context, keyBuffer, keySize);
+    cout << "[Analyst] Loaded CSP Galois key(size=" << keySize << ")" << endl;
+    delete[] keyBuffer;
+    
+    inFile.close();
+    cout << "[Analyst] Keys loaded correctly from file" << endl;
+
+    return 0;
+}
+
+
+void BaseAnalyst::readKeyFromFile(ifstream& inFile,  seal_byte*& keyBuffer, int& keySize)
+{
+    inFile.read(reinterpret_cast<char*>(&keySize), sizeof(keySize));
+    keyBuffer = new seal_byte[keySize];
+    inFile.read(reinterpret_cast<char*>(keyBuffer), keySize);
+}
+
+
+/**
+Return the byte size for HE Secret key
+*/
+int BaseAnalyst::getSecretKeyBytes(seal_byte* &buffer)
+{
+    int analyst_he_sk_size = analyst_he_sk.save_size();
+    buffer = new seal_byte[analyst_he_sk_size];
+    analyst_he_sk.save(buffer, analyst_he_sk_size); 
+
+    cout << "[Analyst] Serialising Secret key (size=" << analyst_he_sk_size << ")" << endl;
+    print_seal_bytes(buffer);
+    
+    return analyst_he_sk_size;
+}
+
+
 
 /**
 Return the byte size for HE Public key
@@ -267,7 +391,7 @@ int BaseAnalyst::getPublicKeyBytes(seal_byte* &buffer)
 /**
 Return the byte size for HE Relin keys
 */
-int BaseAnalyst::getRelinKeysBytes(seal_byte* &buffer)
+int BaseAnalyst::getRelinKeyBytes(seal_byte* &buffer)
 {
     int analyst_he_rk_size = analyst_he_rk.save_size();
     buffer = new seal_byte[analyst_he_rk_size];
@@ -282,7 +406,7 @@ int BaseAnalyst::getRelinKeysBytes(seal_byte* &buffer)
 /**
 Return the byte size for HE Relin keys of CSP
 */
-int BaseAnalyst::getCSPRelinKeysBytes(seal_byte* &buffer)
+int BaseAnalyst::getCSPRelinKeyBytes(seal_byte* &buffer)
 {
     int csp_he_rk_size = csp_he_rk.save_size();
     buffer = new seal_byte[csp_he_rk_size];
@@ -297,7 +421,7 @@ int BaseAnalyst::getCSPRelinKeysBytes(seal_byte* &buffer)
 /**
 Return the byte size for HE Galois keys
 */
-int BaseAnalyst::getGaloisKeysBytes(seal_byte* &buffer)
+int BaseAnalyst::getGaloisKeyBytes(seal_byte* &buffer)
 {
     int analyst_he_gk_size = analyst_he_gk.save_size();
     buffer = new seal_byte[analyst_he_gk_size];
@@ -312,7 +436,7 @@ int BaseAnalyst::getGaloisKeysBytes(seal_byte* &buffer)
 /**
 Return the byte size for HE Galois keys of CSP
 */
-int BaseAnalyst::getCSPGaloisKeysBytes(seal_byte* &buffer)
+int BaseAnalyst::getCSPGaloisKeyBytes(seal_byte* &buffer)
 {
     int csp_he_gk_size = csp_he_gk.save_size();
     buffer = new seal_byte[csp_he_gk_size];

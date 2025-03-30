@@ -100,6 +100,7 @@ int main(int argc,char** argv)
 
     string url;
     string cspUrl;
+    string keyStore = ".keys";
 
     if (argc == 3)
     {
@@ -133,7 +134,14 @@ int main(int argc,char** argv)
 
     string dataset = "SpO2"; // dataset must be either "SpO2" or "ECG"
     analyst->setDataSet(dataset);
-    analyst->generateHEKeys();  // Set up HE key 
+
+    if (analyst->loadHEKeys(keyStore) < 0) {
+        analyst->generateHEKeys(keyStore);  // Set up HE key
+    }
+
+    //analyst->loadHEKeys(keyStore);
+    cout << "key loaded" << endl;    
+    
     analyst->setEncryptor();    // Set up HE encryptor
     analyst->setDecryptor();    // set up HE decryptor
 

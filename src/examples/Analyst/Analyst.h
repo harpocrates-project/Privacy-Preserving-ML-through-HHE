@@ -9,7 +9,9 @@ class BaseAnalyst
     public:
         BaseAnalyst()
         {
-		    context = get_seal_context(config::plain_mod, config::mod_degree, config::seclevel);	
+		    context = get_seal_context(config::plain_mod, config::mod_degree, config::seclevel);
+            setKeyGenerator();
+            setBatchEncoder();	
 	    }
 
         // setter
@@ -25,27 +27,23 @@ class BaseAnalyst
        
         /** 
         Create a HE Secret key
-        @param[in] analyst_keygen The key generator of Analyst
         */
-        void setHESecretKey(KeyGenerator* analyst_keygen); // analyst_he_sk
+        void setHESecretKey(); // analyst_he_sk
        
         /**
         Create a HE Public key
-        @param[in] analyst_keygen The key generator of Analyst
         */
-        void setHEPublicKey(KeyGenerator* analyst_keygen); // analyst_he_pk
+        void setHEPublicKey(); // analyst_he_pk
        
         /** 
         Create HE Relin keys
-        @param[in] analyst_keygen The key generator of Analyst
         */
-        void setHERelinKeys(KeyGenerator* analyst_keygen); // analyst_he_rk
+        void setHERelinKeys(); // analyst_he_rk
        
         /** 
         Create HE Galois keys
-        @param[in] analyst_keygen The key generator of Analyst
         */
-        void setHEGaloisKeys(KeyGenerator* analyst_keygen);  // analyst_he_gk
+        void setHEGaloisKeys();  // analyst_he_gk
        
         /**
         Create a HE encryptor
@@ -64,16 +62,13 @@ class BaseAnalyst
       
         /** 
         Create HE Relin keys for CSP
-        @param[in] analyst_keygen The key generator of Analyst
         */
-        void setCSPHERelinKeys(KeyGenerator* analyst_keygen); // csp_he_rk
+        void setCSPHERelinKeys(); // csp_he_rk
        
         /** 
         Create HE Galois keys for CSP
-        @param[in] analyst_he_benc The bench encoder of Analyst
-        @param[in] analyst_keygen The key generator of Analyst
         */
-        void setCSPHEGaloisKeys(BatchEncoder* analyst_he_benc, KeyGenerator* analyst_keygen);  // csp_he_gk
+        void setCSPHEGaloisKeys();  // csp_he_gk
         
         /**
         Set up a data set name for NN calculation
@@ -143,12 +138,24 @@ class BaseAnalyst
         /**
         Set up HE parameters
         */
-        void hEInitialization();
+        //void hEInitialization();
        
         /**
         Create HE keys
         */
-        void generateHEKeys();
+        void generateHEKeys(const string& fileName);
+
+
+        void saveHEKeys(const string& fileName);
+
+        int loadHEKeys(const string& fileName);
+
+
+        /**
+        Return the byte size for HE Secret key
+        */
+        int getSecretKeyBytes(seal_byte* &);
+
        
         /**
         Return the byte size for HE Public key
@@ -158,22 +165,22 @@ class BaseAnalyst
         /**
         Return the byte size for HE Relin keys
         */
-        int getRelinKeysBytes(seal_byte* &);
+        int getRelinKeyBytes(seal_byte* &);
        
         /**
         Return the byte size for HE Galois keys
         */
-        int getGaloisKeysBytes(seal_byte* &);
+        int getGaloisKeyBytes(seal_byte* &);
       
         /**
         Return the byte size for HE Relin keys of CSP
         */
-        int getCSPRelinKeysBytes(seal_byte* &);
+        int getCSPRelinKeyBytes(seal_byte* &);
        
         /**
         Return the byte size for HE Galois keys of CSP
         */
-        int getCSPGaloisKeysBytes(seal_byte* &);
+        int getCSPGaloisKeyBytes(seal_byte* &);
        
         /**
         Return the result for HE encryption of ML weights
@@ -226,6 +233,9 @@ class BaseAnalyst
 
         // Mutex to protect access to hhePredictions
         std::mutex hhePredictions_mutex;
+
+        void writeKeyToFile(ofstream& outFile,  seal_byte* keyBuffer, int keySize);
+        void readKeyFromFile(ifstream& inFile,  seal_byte*& keyBuffer, int& keySize);
 
     protected:
         vector<Ciphertext> enc_weights_t; // The encrypted weight
