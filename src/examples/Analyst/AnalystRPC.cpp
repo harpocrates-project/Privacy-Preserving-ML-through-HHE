@@ -1,6 +1,5 @@
 #include "AnalystRPC.h"
 #include "CSPServiceAnalystClient.h"
-#include "uuid.h"
 
 /**
 rpc service - get the public key
@@ -100,7 +99,8 @@ int main(int argc,char** argv)
 
     string url;
     string cspUrl;
-    string keyStore = ".keys";
+    string keyStore = ".analyst_keys";
+    string idStore = ".analyst_id";
 
     if (argc == 3)
     {
@@ -120,10 +120,6 @@ int main(int argc,char** argv)
         cspUrl = "localhost:50052";
     }
 
-    // Generate uuid for analyst
-    string analystUUID = uuid::generate_uuid_v4();
-    cout << "Analyst's UUID: " << analystUUID << endl;
-
     // Create objs of analyst and analystRPC
     analyst = new Analyst_hhe_pktnn_1fc();
     analystRPC = new AnalystServiceImpl(url, analyst);
@@ -137,10 +133,7 @@ int main(int argc,char** argv)
 
     if (analyst->loadHEKeys(keyStore) < 0) {
         analyst->generateHEKeys(keyStore);  // Set up HE key
-    }
-
-    //analyst->loadHEKeys(keyStore);
-    cout << "key loaded" << endl;    
+    }  
     
     analyst->setEncryptor();    // Set up HE encryptor
     analyst->setDecryptor();    // set up HE decryptor
@@ -151,7 +144,7 @@ int main(int argc,char** argv)
     analyst->NNModelEncryption(analyst->getDataSet());
 
     // Should send public keys to cloud provider
-    cspClient->addPublicKeys(analystUUID);
+    cspClient->addPublicKeys(analyst->getOrGenerateID(idStore));
 
     // Now send encrpyted model data to cloud provider
     cspClient->addMLModel();

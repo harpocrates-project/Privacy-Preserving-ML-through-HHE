@@ -132,24 +132,21 @@ class BaseAnalyst
         Return a data set name for NN calculation
         */
         string getDataSet(); // data_set
-
-
-        // functions
-        /**
-        Set up HE parameters
-        */
-        //void hEInitialization();
        
         /**
         Create HE keys
         */
         void generateHEKeys(const string& fileName);
 
+        /** 
+        Generate a unique ID for the analyst
+        */
+        string getOrGenerateID(const string& fileName);
 
-        void saveHEKeys(const string& fileName);
-
+        /**
+         * Load HE keys from file
+         */
         int loadHEKeys(const string& fileName);
-
 
         /**
         Return the byte size for HE Secret key
@@ -228,12 +225,16 @@ class BaseAnalyst
 
         string dataset;   // The data set name for NN calculation
 
+        string UUID;
+
         // Map to store predictions associated with patientId
         std::map<std::string, std::vector<int64_t>> hhePredictions;
 
         // Mutex to protect access to hhePredictions
         std::mutex hhePredictions_mutex;
 
+        // Helper methods to save and load HE keys
+        void saveHEKeys(const string& fileName);
         void writeKeyToFile(ofstream& outFile,  seal_byte* keyBuffer, int keySize);
         void readKeyFromFile(ifstream& inFile,  seal_byte*& keyBuffer, int& keySize);
 
