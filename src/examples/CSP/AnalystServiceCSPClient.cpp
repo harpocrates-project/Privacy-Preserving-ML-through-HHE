@@ -24,6 +24,7 @@ bool AnalystServiceCSPClient::addEncryptedResult(string patientId, string analys
       hheproto::CiphertextMsg* result = request.add_result();
       result->set_data(buffer, size);
       result->set_length(size);
+      delete[] buffer;
     }
 
     // Send the encrypted result to Analyst

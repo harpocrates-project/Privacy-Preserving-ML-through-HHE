@@ -789,16 +789,19 @@ bool BaseCSP::deserializeCiphertexts(const google::protobuf::RepeatedPtrField<st
 void BaseCSP::removeHEDecomposeData(string patientId, string analystId) {
     auto& data = getUserEncryptedData(patientId, analystId);
     data.clear();
+    data.shrink_to_fit();
     enc_data_map[analystId].unsafe_erase(patientId);
     cout << "Number of elements in the enc_data_map for analystId: " << analystId << " is " << enc_data_map[analystId].size() << endl;
 
     auto& he_data = getHEEncryptedData(patientId, analystId);
     he_data.clear();
+    he_data.shrink_to_fit();
     he_enc_data_map[analystId].unsafe_erase(patientId);
     cout << "Number of elements in the he_enc_data_map for analystId: " << analystId << " is " << he_enc_data_map[analystId].size() << endl;
 
     auto& he_data_processed = getHEEncDataProcessedMapValue(patientId, analystId);
     he_data_processed.clear();
+    he_data_processed.shrink_to_fit();
     he_enc_data_processed_map[analystId].unsafe_erase(patientId);
     cout << "Number of elements in the he_enc_data_processed_map for analystId: " << analystId << " is " << he_enc_data_processed_map[analystId].size() << endl;
 }
@@ -806,16 +809,19 @@ void BaseCSP::removeHEDecomposeData(string patientId, string analystId) {
 void BaseCSP::removeHEEvaluateData(string patientId, string analystId) {
     auto& he_data_processed = getHEEncDataProcessedMapValue(patientId, analystId);
     he_data_processed.clear();
+    he_data_processed.shrink_to_fit();
     he_enc_data_processed_map[analystId].unsafe_erase(patientId);
     cout << "Number of elements in the he_enc_data_processed_map for analystId: " << analystId << " is " << he_enc_data_processed_map[analystId].size() << endl;
     
     auto& he_product = getHEEncProductMapValue(patientId, analystId);
     he_product.clear();
+    he_product.shrink_to_fit();
     he_enc_product_map[analystId].unsafe_erase(patientId);
     cout << "Number of elements in the he_enc_product_map for analystId: " << analystId << " is " << he_enc_product_map[analystId].size() << endl;
 
     auto& he_sum_product = getHESumEncProductMapValue(patientId, analystId);
     he_sum_product.clear();
+    he_sum_product.shrink_to_fit();
     he_sum_enc_product_map[analystId].unsafe_erase(patientId);
     cout << "Number of elements in the he_sum_enc_product_map for analystId: " << analystId << " is " << he_sum_enc_product_map[analystId].size() << endl;
 }

@@ -25,6 +25,7 @@ Status CSPServiceImpl::addPublicKeys(ServerContext* context, const PublicKeySetM
 
     memcpy(buffer, strBuffer.data(), strBuffer.length());
     csp->addAnalystHEPublicKey(analystId, buffer, length);
+    delete[] buffer;
 
     // Analyst HE Relins key
     strBuffer = request->rk().data();
@@ -34,6 +35,7 @@ Status CSPServiceImpl::addPublicKeys(ServerContext* context, const PublicKeySetM
 
     memcpy(buffer, strBuffer.data(), strBuffer.length());
     csp->addAnalystHERelinKeys(analystId, buffer, length);
+    delete[] buffer;
 
     // Analyst Galois key
     strBuffer = request->gk().data();
@@ -43,6 +45,7 @@ Status CSPServiceImpl::addPublicKeys(ServerContext* context, const PublicKeySetM
 
     memcpy(buffer, strBuffer.data(), strBuffer.length());
     csp->addAnalystHEGaloisKeys(analystId, buffer, length);
+    delete[] buffer;
 
     // CSP HE Relins key
     strBuffer = request->csp_rk().data();
@@ -52,6 +55,7 @@ Status CSPServiceImpl::addPublicKeys(ServerContext* context, const PublicKeySetM
 
     memcpy(buffer, strBuffer.data(), strBuffer.length());
     csp->addHERelinKeys(analystId, buffer, length);
+    delete[] buffer;
 
     // CSP HE Galois key
     strBuffer = request->csp_gk().data();
@@ -61,6 +65,7 @@ Status CSPServiceImpl::addPublicKeys(ServerContext* context, const PublicKeySetM
 
     memcpy(buffer, strBuffer.data(), strBuffer.length());
     csp->addHEGaloisKeys(analystId, buffer, length);
+    delete[] buffer;
 
     // Analyst's UUID
     string analystUUID = request->analystuuid();
@@ -108,6 +113,11 @@ Status CSPServiceImpl::addMLModel(ServerContext* context, const MLModelMsg* requ
     cout << "... ..." << endl;
 
     csp->addAnalystEncryptedWeights(analystId, wBytes, wLengths);
+
+    delete reply;
+    for (auto buf : wBytes) {
+        delete[] buf;
+    }
     
     return Status::OK;
 } 
@@ -153,6 +163,10 @@ Status CSPServiceImpl::addEncryptedKeys(ServerContext* context, const EncSymmetr
     //cout << "lengths size: " << keysLengths.size() << endl;
 
     csp->addUserEncryptedSymmetricKey(analystId, keysBytes, keysLengths);
+
+    for (auto buf : keysBytes) {
+        delete[] buf;
+    }
     
     return Status::OK;
 }
