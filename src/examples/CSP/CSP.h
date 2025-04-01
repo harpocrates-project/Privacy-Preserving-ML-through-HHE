@@ -60,31 +60,31 @@ class BaseCSP
         /**
         Return the HE Secret key
         */
-        SecretKey getHESecretKey(); // csp_he_sk
+        SecretKey& getHESecretKey(); // csp_he_sk
 
         /**
         Return the Analyst HE Public key
         @param[in] analystId The Analyst IP Addr
         */
-        PublicKey getAnalystHEPublicKey(string analystId); // Analyst_he_pk
+        PublicKey& getAnalystHEPublicKey(string analystId); // Analyst_he_pk
         
         /**
         Return the Analyst HE Relin keys
         @param[in] analystId The Analyst IP Addr
         */
-        RelinKeys getAnalystHERelinKeys(string analystId); // Analyst_he_rk
+        RelinKeys& getAnalystHERelinKeys(string analystId); // Analyst_he_rk
         
         /**
         Return the Analyst HE Galois keys
         @param[in] analystId The Analyst IP Addr
         */
-        GaloisKeys getAnalystHEGaloisKeys(string analystId); // Analyst_he_gk 
+        GaloisKeys& getAnalystHEGaloisKeys(string analystId); // Analyst_he_gk 
         
         /**
         Return the User encrypted symmetric key
         @param[in] analystId The Analyst IP Addr
         */
-        vector<Ciphertext> getUserEncryptedSymmetricKey(string analystId); // Client_hhe_key
+        vector<Ciphertext>& getUserEncryptedSymmetricKey(string analystId); // Client_hhe_key
        
         /**
         Return the User encrypted data
@@ -101,7 +101,7 @@ class BaseCSP
         /**
         Return the encrypted result calculated by CSP via HHE decomposition and evaluation
         */
-        int getEncryptedResultBytes(string patientId, string analystId, seal_byte* &buffer, int index);
+       int getEncryptedResultBytes(string patientId, string analystId, std::vector<seal_byte>& buffer, int index);       
 
         /** 
         Return the HE encrypted processed data 
@@ -113,25 +113,25 @@ class BaseCSP
         Return the first value of encrypted weights map
         @param[in] analystId The Analyst IP Addr
         */
-        Ciphertext getEncWeightsMapFirstValue(string analystId);
+        Ciphertext& getEncWeightsMapFirstValue(string analystId);
 
         /** 
         Return the CSP Relin keys value
         @param[in] analystId The Analyst IP Addr
         */
-        RelinKeys getCSPHERelinKeysMapValue(string analystId);
+        RelinKeys& getCSPHERelinKeysMapValue(string analystId);
 
         /** 
         Return the CSP Galois keys value
         @param[in] analystId The Analyst IP Addr
         */
-        GaloisKeys getCSPHEGaloisKeysMapValue(string analystId);
+        GaloisKeys& getCSPHEGaloisKeysMapValue(string analystId);
 
         /** 
         Return the Sum of the HE_ENC_Product
         @param[in] analystId The Analyst IP Addr
         */
-        vector<Ciphertext> getHESumEncProduct(string patientId, string analystId);
+        vector<Ciphertext>& getHESumEncProduct(string patientId, string analystId);
 
         /** 
          * Return the HE encrypted product data
@@ -216,7 +216,7 @@ class BaseCSP
         @param[in] bytes The key bytes
         @param[in] lengths The key length
         */
-        bool addUserEncryptedSymmetricKey(string analystId, vector<seal_byte*> bytes, vector<int> lengths);
+        bool addUserEncryptedSymmetricKey(string analystId, vector<vector<seal_byte>> bytes, vector<int> lengths);
         
         /**
         Add User encrypted data on CSP
@@ -231,7 +231,7 @@ class BaseCSP
         @param[in] bytes The encrypted weights bytes
         @param[in] size The encrypted weights size
         */
-        bool addAnalystEncryptedWeights(string analystId, vector<seal_byte*> bytes, vector<int> size);
+        bool addAnalystEncryptedWeights(string analystId, vector<vector<seal_byte>> bytes, vector<int> size);
 
         /**
         HHE decomposition
@@ -261,7 +261,7 @@ class BaseCSP
         /**
         Helper function to print the ciphertext vector 
         */
-        void print_vec_Ciphertext(vector<Ciphertext> input, size_t size);
+        void print_vec_Ciphertext(vector<Ciphertext>& input, size_t size);
 
         /** 
         Write HHE Decomposition data from memory to a file
@@ -299,21 +299,19 @@ class BaseCSP
         KeyGenerator* csp_keygen;
         SecretKey csp_he_sk;
 
-
-        //GaloisKeys csp_gk;
-        //RelinKeys csp_rk;
-
-        oneapi::tbb::concurrent_unordered_map<string, PublicKey*> analyst_he_pk_map;
-        oneapi::tbb::concurrent_unordered_map<string, RelinKeys*> analyst_he_rk_map;
-        oneapi::tbb::concurrent_unordered_map<string, GaloisKeys*> analyst_he_gk_map;
-        oneapi::tbb::concurrent_unordered_map<string, RelinKeys*> csp_he_rk_map;
-        oneapi::tbb::concurrent_unordered_map<string, GaloisKeys*> csp_he_gk_map;
+        oneapi::tbb::concurrent_unordered_map<string, unique_ptr<PublicKey>> analyst_he_pk_map;
+        oneapi::tbb::concurrent_unordered_map<string, unique_ptr<RelinKeys>> analyst_he_rk_map;
+        oneapi::tbb::concurrent_unordered_map<string, unique_ptr<GaloisKeys>> analyst_he_gk_map;
+        oneapi::tbb::concurrent_unordered_map<string, unique_ptr<RelinKeys>> csp_he_rk_map;
+        oneapi::tbb::concurrent_unordered_map<string, unique_ptr<GaloisKeys>> csp_he_gk_map;
 
         oneapi::tbb::concurrent_unordered_map<string, string> analyst_uuid_map;
         oneapi::tbb::concurrent_unordered_map<string, string> analyst_uuid_id_map;
 
         oneapi::tbb::concurrent_unordered_map<string, vector<Ciphertext>> enc_weights_map;  // Analyst's encrypted weights
         oneapi::tbb::concurrent_unordered_map<string, vector<Ciphertext>> enc_sym_key_map; // User's encrypted symmetric keys
+
+        std::mutex data_cleanup_mutex;
 
     protected:
 

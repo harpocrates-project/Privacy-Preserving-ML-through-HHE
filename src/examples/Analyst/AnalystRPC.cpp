@@ -24,57 +24,41 @@ rpc service - get the encrypted result from CSP
 */
 Status AnalystServiceImpl::addEncryptedResult(ServerContext* context, const CiphertextResult* request, Empty* reply)
 {
-    reply = new Empty();
-
-    
+    *reply = Empty();
 
     // Get the patientId from the request and print it
-    string patientId = request->patientid();
+    const std::string& patientId = request->patientid();
+    cout << "[Analyst Service] Adding and decrypting the result from CSP for patient: " << patientId << endl;
 
-    cout << "[Analyst Service] Adding and decrypting the result from CSP for patient: "<< patientId << endl;
+    //std::vector<std::vector<seal_byte>> resultsBytes;
+    //std::vector<int> resultsLengths;
 
-    std::string strBuffer;
-    seal_byte* buffer = nullptr;
-    vector<seal_byte*> resultsBytes;
-    vector<int> resultsLengths;
-   
-    int len;
-    for (int i = 0, length; i < request->result_size(); i++)
+    for (int i = 0; i < request->result_size(); ++i)
     {
-        strBuffer = request->result(i).data();
-        length = request->result(i).length();
+        //const std::string& strBuffer = request->result(i).data();
+        int length = request->result(i).length();
 
-        buffer = new seal_byte[length];
+        std::vector<seal_byte> buffer(length);
+        memcpy(buffer.data(), request->result(i).data().c_str(), length);
 
-        // Receive the encrypted result from CSP
-        memcpy(buffer, strBuffer.data(), strBuffer.length());
-        resultsBytes.push_back(buffer);
-        resultsLengths.push_back(length);
-        
-        len = length;
+        //resultsBytes.push_back(std::move(buffer));
+        //resultsLengths.push_back(length);
 
         // Analyst calls decryptData() to decrypt the encrypted result
-        analyst->decryptData(patientId, buffer, length);
+        analyst->decryptData(patientId, buffer.data(), length);
     }
-
-    for (auto & b : resultsBytes)
-    {
-        delete[] b; // Free the allocated memory
-    }
-    resultsBytes.clear();
-    resultsBytes.shrink_to_fit();
-    resultsLengths.clear();
-    resultsLengths.shrink_to_fit();
 
     // Write predictions to file
     analyst->writePredictionsToFile(patientId);
 
     return Status::OK;
-} 
+}
+
 
 void AnalystServiceImpl::runServer()
 {
-    listener = new thread(&AnalystServiceImpl::startRPCService, this);
+    std::thread listener(&AnalystServiceImpl::startRPCService, this);
+    listener.join();
 }
 
 void AnalystServiceImpl::startRPCService()
@@ -94,7 +78,8 @@ void AnalystServiceImpl::startRPCService()
 
     // Call BuildAndStart() on the builder to create and start an RPC server for our service.
     unique_ptr<Server> server(builder.BuildAndStart());
-    cout << "[Analyst Service] RCP Server listening on  " << url << endl;
+    cout << "[Analyst Service] RCP Server listening on  " << url << endl
+         << "[Analyst Service] Press Ctrl+C to exit" << endl;
 
     // Call Wait() on the server to do a blocking wait until process is killed or Shutdown() is called
     server->Wait();
@@ -147,8 +132,6 @@ int main(int argc,char** argv)
     analyst->setEncryptor();    // Set up HE encryptor
     analyst->setDecryptor();    // set up HE decryptor
 
-    analystRPC->runServer();    // Start Analyst server
-
     // For HHE_PocketNN_1FC calculation
     analyst->NNModelEncryption(analyst->getDataSet());
 
@@ -158,9 +141,6 @@ int main(int argc,char** argv)
     // Now send encrpyted model data to cloud provider
     cspClient->addMLModel();
 
-    // Wait for a reply in the RPC thread
-
-    cout << "[Analyst Service] Press Enter to exit" << endl;
-    std::cin.get();
+    analystRPC->runServer();    // Start Analyst server
     return 0;
 }

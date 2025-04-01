@@ -33,7 +33,7 @@ using hheproto::DataFile;
 class CSPServiceImpl final:public CSPService::Service
 { 
     public:
-        CSPServiceImpl(string url, BaseCSP* csp)
+        CSPServiceImpl(string url, shared_ptr<BaseCSP> csp)
         {
             this->url = url;
             this->csp = csp;
@@ -73,9 +73,8 @@ class CSPServiceImpl final:public CSPService::Service
         void runServer();
 
     private:
-        BaseCSP* csp;
+        shared_ptr<BaseCSP> csp;
   	    string url; 
-        thread* listener;
  
         void startRPCService();
         

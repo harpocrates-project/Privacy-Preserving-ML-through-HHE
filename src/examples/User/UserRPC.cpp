@@ -8,7 +8,7 @@ int main(int argc,char** argv)
     string analystUrl;
     string cspUrl;
     string dataSet;
-    int records = 3;
+    int records = 30;
 
     if (argc == 5) 
     {

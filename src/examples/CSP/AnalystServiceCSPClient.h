@@ -27,7 +27,7 @@ using hheproto::CiphertextResult;
 class AnalystServiceCSPClient 
 {
     public:
-        AnalystServiceCSPClient(shared_ptr<Channel> channel, BaseCSP* csp)                    
+        AnalystServiceCSPClient(shared_ptr<Channel> channel, shared_ptr<BaseCSP> csp)                    
         {
             stub_ = AnalystService::NewStub(channel);
             this->csp = csp;
@@ -40,5 +40,5 @@ class AnalystServiceCSPClient
 
     private:
         unique_ptr<AnalystService::Stub> stub_;
-        BaseCSP* csp;
+        shared_ptr<BaseCSP> csp;
 };

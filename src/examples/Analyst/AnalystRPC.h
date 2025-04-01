@@ -54,7 +54,6 @@ class AnalystServiceImpl final:public AnalystService::Service
     private:
         BaseAnalyst* analyst;
         string url;
-        thread* listener;
 
         void startRPCService();
 };

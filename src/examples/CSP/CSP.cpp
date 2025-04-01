@@ -39,7 +39,7 @@ Set he_enc_data_processed_map
 */
 void BaseCSP::setHHEEncDataProcessedMap(string patientId, string analystId, vector<Ciphertext> ciphertexts)
 {
-    he_enc_data_processed_map[analystId][patientId] = ciphertexts;
+    he_enc_data_processed_map[analystId][patientId] = std::move(ciphertexts);
 }
 
 // getter
@@ -62,7 +62,7 @@ Evaluator *BaseCSP::getEvaluator()
 /**
 Return the HE Secret key
 */
-SecretKey BaseCSP::getHESecretKey()
+SecretKey& BaseCSP::getHESecretKey()
 {
     return csp_he_sk;
 }
@@ -70,7 +70,7 @@ SecretKey BaseCSP::getHESecretKey()
 /**
 Return the Analyst HE Public key
 */
-PublicKey BaseCSP::getAnalystHEPublicKey(string analystId)
+PublicKey& BaseCSP::getAnalystHEPublicKey(string analystId)
 {
     auto it = analyst_he_pk_map.find(analystId);
     if (it == analyst_he_pk_map.end())
@@ -84,7 +84,7 @@ PublicKey BaseCSP::getAnalystHEPublicKey(string analystId)
 /**
 Return the Analyst HE Relin keys
 */
-RelinKeys BaseCSP::getAnalystHERelinKeys(string analystId)
+RelinKeys& BaseCSP::getAnalystHERelinKeys(string analystId)
 {
     auto it = analyst_he_rk_map.find(analystId);
     if (it == analyst_he_rk_map.end())
@@ -98,7 +98,7 @@ RelinKeys BaseCSP::getAnalystHERelinKeys(string analystId)
 /**
 Return the Analyst HE Galois keys
 */
-GaloisKeys BaseCSP::getAnalystHEGaloisKeys(string analystId)
+GaloisKeys& BaseCSP::getAnalystHEGaloisKeys(string analystId)
 {
     auto it = analyst_he_gk_map.find(analystId);
     if (it == analyst_he_gk_map.end())
@@ -112,7 +112,7 @@ GaloisKeys BaseCSP::getAnalystHEGaloisKeys(string analystId)
 /**
 Return the User encrypted symmetric key
 */
-vector<Ciphertext> BaseCSP::getUserEncryptedSymmetricKey(string analystId)
+vector<Ciphertext>& BaseCSP::getUserEncryptedSymmetricKey(string analystId)
 {
     auto it = enc_sym_key_map.find(analystId);
     if (it == enc_sym_key_map.end())
@@ -154,7 +154,7 @@ vector<vector<Ciphertext>>& BaseCSP::getHEEncryptedData(string patientId, string
 /**
 Return the Sum of the HE_ENC_Product
 */
-vector<Ciphertext> BaseCSP::getHESumEncProduct(string patientId, string analystId)
+vector<Ciphertext>& BaseCSP::getHESumEncProduct(string patientId, string analystId)
 {
     auto it = he_sum_enc_product_map.find(analystId);
     if (it == he_sum_enc_product_map.end() || it->second.find(patientId) == it->second.end())
@@ -169,20 +169,20 @@ vector<Ciphertext> BaseCSP::getHESumEncProduct(string patientId, string analystI
 Return the encrypted result calculated by CSP via HHE decomposition and evaluation
 */
 
-int BaseCSP::getEncryptedResultBytes(string patientId, string analystId, seal_byte *&buffer, int index)
+int BaseCSP::getEncryptedResultBytes(string patientId, string analystId, std::vector<seal_byte>& buffer, int index)
 {
-    //Ciphertext encrypted_sum_vec = he_sum_enc_product_map[analystId][patientId].at(index);
     Ciphertext encrypted_sum_vec = getHESumEncProduct(patientId, analystId).at(index);
 
     int encrypted_sum_vec_size = encrypted_sum_vec.save_size();
-    buffer = new seal_byte[encrypted_sum_vec_size];
-    encrypted_sum_vec.save(buffer, encrypted_sum_vec_size);
+    buffer.resize(encrypted_sum_vec_size);
+    encrypted_sum_vec.save(buffer.data(), encrypted_sum_vec_size);
 
     cout << "[CSP] Serialised encrypted result for Analyst (AnalystId: " << analystId << ", size: " << encrypted_sum_vec_size << ")" << endl;
-    print_seal_bytes(buffer);
+    print_seal_bytes(buffer.data());
 
     return encrypted_sum_vec_size;
 }
+
 
 /**
 Return the HE encrypted processed data
@@ -202,7 +202,7 @@ vector<Ciphertext>& BaseCSP::getHEEncDataProcessedMapValue(string patientId, str
 /**
 Return the first value of encrypted weights map
 */
-Ciphertext BaseCSP::getEncWeightsMapFirstValue(string analystId)
+Ciphertext& BaseCSP::getEncWeightsMapFirstValue(string analystId)
 {
     auto it = enc_weights_map.find(analystId);
     if (it == enc_weights_map.end() || it->second.empty())
@@ -216,7 +216,7 @@ Ciphertext BaseCSP::getEncWeightsMapFirstValue(string analystId)
 /**
 Return the CSP Relin keys value
 */
-RelinKeys BaseCSP::getCSPHERelinKeysMapValue(string analystId)
+RelinKeys& BaseCSP::getCSPHERelinKeysMapValue(string analystId)
 {
     auto it = csp_he_rk_map.find(analystId);
     if (it == csp_he_rk_map.end())
@@ -230,7 +230,7 @@ RelinKeys BaseCSP::getCSPHERelinKeysMapValue(string analystId)
 /**
 Return the CSP Galois keys value
 */
-GaloisKeys BaseCSP::getCSPHEGaloisKeysMapValue(string analystId)
+GaloisKeys& BaseCSP::getCSPHEGaloisKeysMapValue(string analystId)
 {
     auto it = csp_he_gk_map.find(analystId);
     if (it == csp_he_gk_map.end())
@@ -283,19 +283,17 @@ Helper function to print ciphertext
 */
 void BaseCSP::print_Ciphertext(Ciphertext input)
 {
-    seal_byte *buffer = nullptr;
-
     int input_size = input.save_size();
-    buffer = new seal_byte[input_size];
-    input.save(buffer, input_size);
-    print_seal_bytes(buffer);
-    delete[] buffer;
+    std::vector<seal_byte> buffer(input_size);
+    input.save(buffer.data(), input_size);
+    print_seal_bytes(buffer.data());
 }
+
 
 /**
 Helper function to print the ciphertext vector
 */
-void BaseCSP::print_vec_Ciphertext(vector<Ciphertext> input, size_t size)
+void BaseCSP::print_vec_Ciphertext(vector<Ciphertext>& input, size_t size)
 {
     for (int i = 0; i < size; i++)
     {
@@ -484,10 +482,10 @@ try
     cout << "[CSP] Adding Analyst HE Public key (AnalystId: " << analystId << ") and (size=" << size << ")" << endl;
     print_seal_bytes(bytes);
 
-    PublicKey *analyst_he_pk = new PublicKey();
+    std::unique_ptr<PublicKey> analyst_he_pk = std::make_unique<PublicKey>();
     analyst_he_pk->load(*context, bytes, size);
 
-    analyst_he_pk_map[analystId] = analyst_he_pk;
+    analyst_he_pk_map[analystId] = std::move(analyst_he_pk);
 
     return true;
 }
@@ -506,10 +504,10 @@ bool BaseCSP::addAnalystHERelinKeys(string analystId, seal_byte *bytes, int size
     cout << "[CSP] Adding Analyst HE Relin keys (AnalystId: " << analystId << ") and (size=" << size << ")" << endl;
     print_seal_bytes(bytes);
 
-    RelinKeys *analyst_he_rk = new RelinKeys();
+    std::unique_ptr<RelinKeys> analyst_he_rk = std::make_unique<RelinKeys>();
     analyst_he_rk->load(*context, bytes, size);
 
-    analyst_he_rk_map[analystId] = analyst_he_rk;
+    analyst_he_rk_map[analystId] = std::move(analyst_he_rk);
 
     return true;
 }
@@ -522,10 +520,10 @@ bool BaseCSP::addHERelinKeys(string analystId, seal_byte *bytes, int size)
     cout << "[CSP] Adding CSP Relin keys (AnalystId: " << analystId << ") and (size=" << size << ")" << endl;
     print_seal_bytes(bytes);
 
-    RelinKeys *csp_he_rk = new RelinKeys();
+    std::unique_ptr<RelinKeys> csp_he_rk = std::make_unique<RelinKeys>();
     csp_he_rk->load(*context, bytes, size);
 
-    csp_he_rk_map[analystId] = csp_he_rk;
+    csp_he_rk_map[analystId] = std::move(csp_he_rk);
 
     return true;
 }
@@ -538,10 +536,10 @@ bool BaseCSP::addAnalystHEGaloisKeys(string analystId, seal_byte *bytes, int siz
     cout << "[CSP] Adding Analyst Galois keys (AnalystId: " << analystId << ") and (size=" << size << ")" << endl;
     print_seal_bytes(bytes);
 
-    GaloisKeys *analyst_he_gk = new GaloisKeys();
+    unique_ptr<GaloisKeys> analyst_he_gk = std::make_unique<GaloisKeys>();
     analyst_he_gk->load(*context, bytes, size);
 
-    analyst_he_gk_map[analystId] = analyst_he_gk;
+    analyst_he_gk_map[analystId] = std::move(analyst_he_gk);
 
     return true;
 }
@@ -554,10 +552,10 @@ bool BaseCSP::addHEGaloisKeys(string analystId, seal_byte *bytes, int size)
     cout << "[CSP] Adding CSP Galois keys (AnalystId: " << analystId << ") and (size=" << size << ")" << endl;
     print_seal_bytes(bytes);
 
-    GaloisKeys *csp_he_gk = new GaloisKeys();
+    unique_ptr<GaloisKeys> csp_he_gk = std::make_unique<GaloisKeys>();
     csp_he_gk->load(*context, bytes, size);
 
-    csp_he_gk_map[analystId] = csp_he_gk;
+    csp_he_gk_map[analystId] = std::move(csp_he_gk);
 
     return true;
 }
@@ -565,24 +563,24 @@ bool BaseCSP::addHEGaloisKeys(string analystId, seal_byte *bytes, int size)
 /**
 Add User encrypted symmetric key on CSP
 */
-bool BaseCSP::addUserEncryptedSymmetricKey(string analystId, vector<seal_byte *> bytes, vector<int> lengths)
+bool BaseCSP::addUserEncryptedSymmetricKey(string analystId, vector<vector<seal_byte>> bytes, vector<int> lengths)
 {
     cout << "[CSP] Adding User encrypted symmetric key (AnalystId: " << analystId << ")" << endl;
 
     vector<Ciphertext> keys;
 
-    for (int i = 0; i < bytes.size(); i++)
+    for (size_t i = 0; i < bytes.size(); i++)
     {
-        Ciphertext *key = new Ciphertext();
-        key->load(*context, bytes[i], lengths[i]);
-        keys.push_back(*key);
-        delete key;
+        Ciphertext key;
+        key.load(*context, bytes[i].data(), lengths[i]);
+        keys.push_back(key);
     }
 
     enc_sym_key_map[analystId] = keys;
 
     return true;
 }
+
 
 /**
 Add User encrypted data on CSP
@@ -632,24 +630,25 @@ string BaseCSP::getAnalystIdfromUUID(string analystId)
 /**
 Add Analyst NN model encrypted weights on CSP
 */
-bool BaseCSP::addAnalystEncryptedWeights(string analystId, vector<seal_byte *> bytes, vector<int> size)
+bool BaseCSP::addAnalystEncryptedWeights(string analystId, vector<vector<seal_byte>> bytes, vector<int> size)
 {
     cout << "[CSP] Adding ML model encrypted weights (AnalystId: " << analystId << ")" << endl;
 
     vector<Ciphertext> weights;
 
-    for (int i = 0; i < bytes.size(); i++)
+    for (size_t i = 0; i < bytes.size(); i++)
     {
-        Ciphertext *weight = new Ciphertext();
-        weight->load(*context, bytes[i], size[i]);
-        weights.push_back(*weight);
-        delete weight;
+        Ciphertext weight;
+        weight.load(*context, bytes[i].data(), size[i]);
+        weights.push_back(weight);
     }
 
     enc_weights_map[analystId] = weights;
 
     return true;
 }
+
+
 
 /**
 Write HHE Decomposition data from memory to a file
@@ -783,51 +782,60 @@ bool BaseCSP::deserializeCiphertexts(const google::protobuf::RepeatedPtrField<st
     }
 }
 
-void BaseCSP::removeHEDecomposeData(string patientId, string analystId) {
-    getUserEncryptedSymmetricKey(analystId).clear();
-    getUserEncryptedSymmetricKey(analystId).shrink_to_fit();
-    enc_sym_key_map.unsafe_erase(analystId);
-    cout << "Number of elements in the enc_sym_key_map for analystId: " << analystId << " is " << enc_sym_key_map[analystId].size() << endl;
+void BaseCSP::removeHEDecomposeData(string patientId, string analystId)
+{
+    {
+        std::lock_guard<std::mutex> lock(data_cleanup_mutex);
 
-    auto& data = getUserEncryptedData(patientId, analystId);
-    data.clear();
-    data.shrink_to_fit();
-    enc_data_map[analystId].unsafe_erase(patientId);
-    cout << "Number of elements in the enc_data_map for analystId: " << analystId << " is " << enc_data_map[analystId].size() << endl;
+        getUserEncryptedSymmetricKey(analystId).clear();
+        getUserEncryptedSymmetricKey(analystId).shrink_to_fit();
+        enc_sym_key_map.unsafe_erase(analystId);
+        cout << "Number of elements in the enc_sym_key_map for analystId: " << analystId << " is " << enc_sym_key_map[analystId].size() << endl;
 
-    auto& he_data = getHEEncryptedData(patientId, analystId);
-    he_data.clear();
-    he_data.shrink_to_fit();
-    he_enc_data_map[analystId].unsafe_erase(patientId);
-    cout << "Number of elements in the he_enc_data_map for analystId: " << analystId << " is " << he_enc_data_map[analystId].size() << endl;
+        auto &data = getUserEncryptedData(patientId, analystId);
+        data.clear();
+        data.shrink_to_fit();
+        enc_data_map[analystId].unsafe_erase(patientId);
+        cout << "Number of elements in the enc_data_map for analystId: " << analystId << " is " << enc_data_map[analystId].size() << endl;
 
-    auto& he_data_processed = getHEEncDataProcessedMapValue(patientId, analystId);
-    he_data_processed.clear();
-    he_data_processed.shrink_to_fit();
-    he_enc_data_processed_map[analystId].unsafe_erase(patientId);
-    cout << "Number of elements in the he_enc_data_processed_map for analystId: " << analystId << " is " << he_enc_data_processed_map[analystId].size() << endl;
+        auto &he_data = getHEEncryptedData(patientId, analystId);
+        he_data.clear();
+        he_data.shrink_to_fit();
+        he_enc_data_map[analystId].unsafe_erase(patientId);
+        cout << "Number of elements in the he_enc_data_map for analystId: " << analystId << " is " << he_enc_data_map[analystId].size() << endl;
+
+        auto &he_data_processed = getHEEncDataProcessedMapValue(patientId, analystId);
+        he_data_processed.clear();
+        he_data_processed.shrink_to_fit();
+        he_enc_data_processed_map[analystId].unsafe_erase(patientId);
+        cout << "Number of elements in the he_enc_data_processed_map for analystId: " << analystId << " is " << he_enc_data_processed_map[analystId].size() << endl;
+    }
 }
 
-void BaseCSP::removeHEEvaluateData(string patientId, string analystId) {
-    auto& he_data_processed = getHEEncDataProcessedMapValue(patientId, analystId);
-    he_data_processed.clear();
-    he_data_processed.shrink_to_fit();
-    he_enc_data_processed_map[analystId].unsafe_erase(patientId);
-    cout << "Number of elements in the he_enc_data_processed_map for analystId: " << analystId << " is " << he_enc_data_processed_map[analystId].size() << endl;
-    
-    auto& he_product = getHEEncProductMapValue(patientId, analystId);
-    he_product.clear();
-    he_product.shrink_to_fit();
-    he_enc_product_map[analystId].unsafe_erase(patientId);
-    cout << "Number of elements in the he_enc_product_map for analystId: " << analystId << " is " << he_enc_product_map[analystId].size() << endl;
+void BaseCSP::removeHEEvaluateData(string patientId, string analystId)
+{
+    {
+        std::lock_guard<std::mutex> lock(data_cleanup_mutex);
 
-    auto& he_sum_product = getHESumEncProductMapValue(patientId, analystId);
-    he_sum_product.clear();
-    he_sum_product.shrink_to_fit();
-    he_sum_enc_product_map[analystId].unsafe_erase(patientId);
-    cout << "Number of elements in the he_sum_enc_product_map for analystId: " << analystId << " is " << he_sum_enc_product_map[analystId].size() << endl;
+        auto &he_data_processed = getHEEncDataProcessedMapValue(patientId, analystId);
+        he_data_processed.clear();
+        he_data_processed.shrink_to_fit();
+        he_enc_data_processed_map[analystId].unsafe_erase(patientId);
+        cout << "Number of elements in the he_enc_data_processed_map for analystId: " << analystId << " is " << he_enc_data_processed_map[analystId].size() << endl;
+
+        auto &he_product = getHEEncProductMapValue(patientId, analystId);
+        he_product.clear();
+        he_product.shrink_to_fit();
+        he_enc_product_map[analystId].unsafe_erase(patientId);
+        cout << "Number of elements in the he_enc_product_map for analystId: " << analystId << " is " << he_enc_product_map[analystId].size() << endl;
+
+        auto &he_sum_product = getHESumEncProductMapValue(patientId, analystId);
+        he_sum_product.clear();
+        he_sum_product.shrink_to_fit();
+        he_sum_enc_product_map[analystId].unsafe_erase(patientId);
+        cout << "Number of elements in the he_sum_enc_product_map for analystId: " << analystId << " is " << he_sum_enc_product_map[analystId].size() << endl;
+    }
 }
-
 
 void CSPParallel_hhe_pktnn_1fc::performDecomposition(string patientId, std::string analystId, pasta::PASTA_SEAL &HHE)
 {
@@ -924,10 +932,10 @@ bool CSPParallel_hhe_pktnn_1fc::evaluateModel(string patientId, string analystId
         try
         {
             std::cout << "Thread " << std::this_thread::get_id() << " started for record " << index << std::endl;
-            Ciphertext tmp;
-            sealhelper::packed_enc_multiply(record, getEncWeightsMapFirstValue(analystId), tmp, *getEvaluator());
+            Ciphertext tmp_result;
+            sealhelper::packed_enc_multiply(record, getEncWeightsMapFirstValue(analystId), tmp_result, *getEvaluator());
 
-            he_enc_product[index] = tmp;
+            he_enc_product[index] = std::move(tmp_result);
 
             std::cout << "Thread " << std::this_thread::get_id() << " finished for record " << index << std::endl;
         }
@@ -978,11 +986,11 @@ bool CSPParallel_hhe_pktnn_1fc::evaluateModel(string patientId, string analystId
 
             // Do encrypted sum on the resulting product vector
             std::cout << "[CSP] Executing encrypted sum on the encrypted vector" << std::endl;
-            Ciphertext tmp1;
-            sealhelper::encrypted_vec_sum(record, tmp1, *getEvaluator(), getAnalystHEGaloisKeys(analystId), inputLen);
+            Ciphertext tmp_result;
+            sealhelper::encrypted_vec_sum(record, tmp_result, *getEvaluator(), getAnalystHEGaloisKeys(analystId), inputLen);
 
-            he_sum_enc_product[index] = tmp1;
-
+            he_sum_enc_product[index] = std::move(tmp_result);
+            
             std::cout << "Thread " << std::this_thread::get_id() << " finished for relinearization and sum of record " << index << std::endl;
         }
         catch (const std::exception &e)

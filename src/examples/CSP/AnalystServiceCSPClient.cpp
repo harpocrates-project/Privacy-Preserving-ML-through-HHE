@@ -16,15 +16,14 @@ bool AnalystServiceCSPClient::addEncryptedResult(string patientId, string analys
 
     // get encrypted results
     int resultsNumber = csp->getHESumEncProduct(patientId, analystId).size();
-    seal_byte* buffer;
+    vector<seal_byte> buffer;
 
     for (int i=0; i<resultsNumber; i++)
     {
       int size = csp->getEncryptedResultBytes(patientId, analystId, buffer, i);
       hheproto::CiphertextMsg* result = request.add_result();
-      result->set_data(buffer, size);
+      result->set_data(buffer.data(), size);
       result->set_length(size);
-      delete[] buffer;
     }
 
     // Send the encrypted result to Analyst
