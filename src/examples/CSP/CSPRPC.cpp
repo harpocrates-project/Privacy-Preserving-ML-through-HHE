@@ -292,6 +292,8 @@ Status CSPServiceImpl::evaluateModel(ServerContext* context, const CiphertextByt
         return Status(StatusCode::INTERNAL, "Failed to send the encrypted result to Analyst");
     }
 
+    delete analystRPCClient;
+
     return Status::OK;
 }
 
@@ -348,6 +350,8 @@ Status CSPServiceImpl::evaluateModelFromFile(ServerContext* context, const DataF
     {
         return Status(StatusCode::INTERNAL, "Failed to send the encrypted result to Analyst");
     }
+
+    delete analystRPCClient;
 
     return Status::OK; 
 }
@@ -424,7 +428,7 @@ int main(int argc,char** argv)
     cspRPC = new CSPServiceImpl(url, csp);
 
     // Set up HE params
-    csp->hEInitialization();   
+    csp->heInit();   
     
     // Start the csp rpc service
     cspRPC->runServer();

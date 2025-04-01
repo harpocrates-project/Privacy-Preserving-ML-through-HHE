@@ -29,7 +29,7 @@ class BaseCSP
         /**
         Create a HE Secret key
         */
-        void setHESecretKey(KeyGenerator* csp_keygen); // csp_he_sk
+        void setHESecretKey(); // csp_he_sk
               
         /**
         Set he_enc_data_processed_map
@@ -159,7 +159,7 @@ class BaseCSP
         /**
         Set up HE parameters
         */
-        void hEInitialization();
+        void heInit();
         
         /**
         Add Analyst HE Public key on CSP 

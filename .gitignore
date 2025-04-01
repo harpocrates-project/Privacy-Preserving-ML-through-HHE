@@ -365,4 +365,5 @@ libs/pasta3/
 
 #analyst output files
 *_hhe_binaryoutput.txt
-.keys
+.analyst_id
+.analyst_keys

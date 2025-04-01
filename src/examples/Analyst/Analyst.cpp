@@ -531,6 +531,8 @@ void BaseAnalyst::decryptData(string patientId, seal_byte *bytes, int size)
         hhePredictions[patientId].push_back(hhe_pred);
     }
 
+    delete encrypted_sum_vec;
+
     cout << "\n---------------------- Done ----------------------" << endl;
 }
 
@@ -555,6 +557,14 @@ void BaseAnalyst::writePredictionsToFile(const string &patientId)
 
     outFile.close();
     cout << "Predictions written to file: " << fileName << endl;
+
+    // Clear the predictions for the patientId
+    {
+        std::lock_guard<std::mutex> lock(hhePredictions_mutex);
+        hhePredictions[patientId].clear();
+        hhePredictions[patientId].shrink_to_fit();
+        hhePredictions.erase(patientId);
+    }
 }
 
 /**

@@ -57,6 +57,15 @@ Status AnalystServiceImpl::addEncryptedResult(ServerContext* context, const Ciph
         analyst->decryptData(patientId, buffer, length);
     }
 
+    for (auto & b : resultsBytes)
+    {
+        delete[] b; // Free the allocated memory
+    }
+    resultsBytes.clear();
+    resultsBytes.shrink_to_fit();
+    resultsLengths.clear();
+    resultsLengths.shrink_to_fit();
+
     // Write predictions to file
     analyst->writePredictionsToFile(patientId);
 

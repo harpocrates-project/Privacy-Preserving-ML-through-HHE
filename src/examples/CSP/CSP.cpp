@@ -28,7 +28,7 @@ void BaseCSP::setEvaluator()
 /**
 Create a HE Secret key
 */
-void BaseCSP::setHESecretKey(KeyGenerator *csp_keygen)
+void BaseCSP::setHESecretKey()
 {
     std::cout << "[CSP] Creating a new HE secret key from the context" << std::endl;
     csp_he_sk = csp_keygen->secret_key();
@@ -289,6 +289,7 @@ void BaseCSP::print_Ciphertext(Ciphertext input)
     buffer = new seal_byte[input_size];
     input.save(buffer, input_size);
     print_seal_bytes(buffer);
+    delete[] buffer;
 }
 
 /**
@@ -306,17 +307,11 @@ void BaseCSP::print_vec_Ciphertext(vector<Ciphertext> input, size_t size)
 /**
 Set up HE parameters
 */
-void BaseCSP::hEInitialization()
+void BaseCSP::heInit()
 {
-    // setter
     setKeyGenerator();
     setEvaluator();
-
-    // getter
-    csp_keygen = getKeyGenerator();
-    csp_he_eval = getEvaluator();
-
-    setHESecretKey(csp_keygen);
+    setHESecretKey();
 }
 
 /**
@@ -581,6 +576,7 @@ bool BaseCSP::addUserEncryptedSymmetricKey(string analystId, vector<seal_byte *>
         Ciphertext *key = new Ciphertext();
         key->load(*context, bytes[i], lengths[i]);
         keys.push_back(*key);
+        delete key;
     }
 
     enc_sym_key_map[analystId] = keys;
@@ -647,6 +643,7 @@ bool BaseCSP::addAnalystEncryptedWeights(string analystId, vector<seal_byte *> b
         Ciphertext *weight = new Ciphertext();
         weight->load(*context, bytes[i], size[i]);
         weights.push_back(*weight);
+        delete weight;
     }
 
     enc_weights_map[analystId] = weights;
@@ -787,6 +784,11 @@ bool BaseCSP::deserializeCiphertexts(const google::protobuf::RepeatedPtrField<st
 }
 
 void BaseCSP::removeHEDecomposeData(string patientId, string analystId) {
+    getUserEncryptedSymmetricKey(analystId).clear();
+    getUserEncryptedSymmetricKey(analystId).shrink_to_fit();
+    enc_sym_key_map.unsafe_erase(analystId);
+    cout << "Number of elements in the enc_sym_key_map for analystId: " << analystId << " is " << enc_sym_key_map[analystId].size() << endl;
+
     auto& data = getUserEncryptedData(patientId, analystId);
     data.clear();
     data.shrink_to_fit();
