@@ -1,0 +1,6 @@
+cloud@xnat-integration-docker2:/usr/local/share/harpocrates-distributed-hhe-ppml$ time (wc -l data/Harpocrates_recordingwise_SIESTA_4percent/*_data.txt | head -n -1 | while read -r n f ; do ./build/user 10.254.1.5:50051 10.254.1.10:50052 $f $n ; done)
+
+real    3050m34,049s
+user    3m44,957s
+sys     0m29,770s
+
