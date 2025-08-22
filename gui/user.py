@@ -17,7 +17,6 @@ class UserWrapper(CommandLineWrapper):
         self.spo2_data = tk.StringVar()
         self.num_records = tk.IntVar()
         super().__init__(master)
-        # Update number of records whenever the SpO2 data file changes
         self.spo2_data.trace_add("write", lambda *args: self.on_add_spo2_data())
 
     def on_add_spo2_data(self, *args, **kwargs):
