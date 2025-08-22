@@ -373,3 +373,5 @@ libs/pasta3/
 
 # Python virtual env
 env
+
+*.egg-info
