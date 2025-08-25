@@ -34,19 +34,29 @@ class CSPServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.addData = channel.unary_unary(
+                '/csp.CSPService/addData',
+                request_serializer=csp__pb2.File.SerializeToString,
+                response_deserializer=csp__pb2.Empty.FromString,
+                _registered_method=True)
         self.evaluate = channel.unary_unary(
                 '/csp.CSPService/evaluate',
-                request_serializer=csp__pb2.DataFile.SerializeToString,
-                response_deserializer=csp__pb2.Empty.FromString,
+                request_serializer=csp__pb2.StoredFile.SerializeToString,
+                response_deserializer=csp__pb2.File.FromString,
                 _registered_method=True)
 
 
 class CSPServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
+    def addData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def evaluate(self, request, context):
-        """Evaluate the supplied DataMatrix (in‑memory) and write a BinaryOutput file.
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -54,10 +64,15 @@ class CSPServiceServicer(object):
 
 def add_CSPServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'addData': grpc.unary_unary_rpc_method_handler(
+                    servicer.addData,
+                    request_deserializer=csp__pb2.File.FromString,
+                    response_serializer=csp__pb2.Empty.SerializeToString,
+            ),
             'evaluate': grpc.unary_unary_rpc_method_handler(
                     servicer.evaluate,
-                    request_deserializer=csp__pb2.DataFile.FromString,
-                    response_serializer=csp__pb2.Empty.SerializeToString,
+                    request_deserializer=csp__pb2.StoredFile.FromString,
+                    response_serializer=csp__pb2.File.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -69,6 +84,33 @@ def add_CSPServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class CSPService(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def addData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/csp.CSPService/addData',
+            csp__pb2.File.SerializeToString,
+            csp__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def evaluate(request,
@@ -85,8 +127,8 @@ class CSPService(object):
             request,
             target,
             '/csp.CSPService/evaluate',
-            csp__pb2.DataFile.SerializeToString,
-            csp__pb2.Empty.FromString,
+            csp__pb2.StoredFile.SerializeToString,
+            csp__pb2.File.FromString,
             options,
             channel_credentials,
             insecure,

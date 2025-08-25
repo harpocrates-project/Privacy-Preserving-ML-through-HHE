@@ -24,17 +24,19 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tcsp.proto\x12\x03\x63sp\"*\n\x08\x44\x61taFile\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\"\x07\n\x05\x45mpty25\n\nCSPService\x12\'\n\x08\x65valuate\x12\r.csp.DataFile\x1a\n.csp.Empty\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tcsp.proto\x12\x03\x63sp\"&\n\x04\x46ile\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\"\x1e\n\nStoredFile\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"\x07\n\x05\x45mpty2Z\n\nCSPService\x12\"\n\x07\x61\x64\x64\x44\x61ta\x12\t.csp.File\x1a\n.csp.Empty\"\x00\x12(\n\x08\x65valuate\x12\x0f.csp.StoredFile\x1a\t.csp.File\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'csp_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_DATAFILE']._serialized_start=18
-  _globals['_DATAFILE']._serialized_end=60
-  _globals['_EMPTY']._serialized_start=62
-  _globals['_EMPTY']._serialized_end=69
-  _globals['_CSPSERVICE']._serialized_start=71
-  _globals['_CSPSERVICE']._serialized_end=124
+  _globals['_FILE']._serialized_start=18
+  _globals['_FILE']._serialized_end=56
+  _globals['_STOREDFILE']._serialized_start=58
+  _globals['_STOREDFILE']._serialized_end=88
+  _globals['_EMPTY']._serialized_start=90
+  _globals['_EMPTY']._serialized_end=97
+  _globals['_CSPSERVICE']._serialized_start=99
+  _globals['_CSPSERVICE']._serialized_end=189
 # @@protoc_insertion_point(module_scope)

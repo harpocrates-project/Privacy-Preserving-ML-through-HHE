@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package csp;
+
+message File {
+  string filename = 1;
+  bytes  data     = 2;
+}
+
+message StoredFile {
+  string filename = 1;
+}
+
+message Empty {}
+
+service CSPService {
+  rpc addData  (File) returns (Empty) {}
+  rpc evaluate (StoredFile) returns (File) {}
+}
