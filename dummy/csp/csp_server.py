@@ -226,8 +226,8 @@ def _parse_cli() -> argparse.Namespace:
     parser.add_argument(
         "--port",
         type=int,
-        default=50051,
-        help="Port number to listen on (default: 50051).",
+        default=50052,
+        help="Port number to listen on (default: 50052).",
     )
     parser.add_argument(
         "--out-dir",
