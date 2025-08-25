@@ -4,10 +4,10 @@ from base import CommandLineWrapper
 
 
 class AnalystWrapper(CommandLineWrapper):
-    def __init__(self, master=None):
-        self.host = tk.StringVar()
-        self.csp = tk.StringVar()
-        super().__init__(master)
+    def __init__(self, master=None, default_exe=None, default_host=None, default_csp=None):
+        self.host = tk.StringVar(value=default_host)
+        self.csp = tk.StringVar(value=default_csp)
+        super().__init__(master, default_exe)
 
     @property
     def terminal_cmd(self):
@@ -43,5 +43,10 @@ class AnalystWrapper(CommandLineWrapper):
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("Analyst")
-    app = AnalystWrapper(master=root)
+    app = AnalystWrapper(
+        master=root,
+        default_exe="gui/analyst.sh",
+        default_host="localhost:50051",
+        default_csp="localhost:50052",
+    )
     root.mainloop()

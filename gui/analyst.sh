@@ -15,6 +15,6 @@ inotifywait -m -e close_write --format '%w%f' . |
 monitor_pid=$!
 
 # Run the wrapped executable, forwarding its output to the terminal
-./build/analyst 2>&1
+./build/analyst "$@" 2>&1
 
 # When the executable finishes the trap will terminate the monitor

@@ -11,13 +11,13 @@ from base import CommandLineWrapper
 
 
 class UserWrapper(CommandLineWrapper):
-    def __init__(self, master=None):
-        self.analyst = tk.StringVar()
-        self.csp = tk.StringVar()
+    def __init__(self, master=None, default_exe=None, default_analyst=None, default_csp=None):
+        self.analyst = tk.StringVar(value=default_analyst)
+        self.csp = tk.StringVar(value=default_csp)
         self.spo2_data = tk.StringVar()
         self.num_records = tk.IntVar()
-        super().__init__(master)
-        self.spo2_data.trace_add("write", lambda *args: self.on_add_spo2_data())
+        super().__init__(master, default_exe)
+        self.spo2_data.trace_add("write", self.on_add_spo2_data)
 
     def on_add_spo2_data(self, *args, **kwargs):
         self.update_num_records()
@@ -138,5 +138,10 @@ class UserWrapper(CommandLineWrapper):
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("User")
-    app = UserWrapper(master=root)
+    app = UserWrapper(
+        master=root,
+        default_exe="build/user",
+        default_analyst="localhost:50051",
+        default_csp="localhost:50052",
+    )
     root.mainloop()

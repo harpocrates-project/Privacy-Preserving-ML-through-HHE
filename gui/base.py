@@ -10,9 +10,9 @@ class CommandLineWrapper(tk.Frame):
     inside the system's default terminal emulator (Linux only).
     """
 
-    def __init__(self, master=None):
+    def __init__(self, master=None, default_exe=None):
         super().__init__(master)
-        self.executable_path = tk.StringVar()
+        self.executable_path = tk.StringVar(value=default_exe)
         self.terminal_cmd_template = ["x-terminal-emulator", "-e", "{cmd}"]
         self.create_widgets()
         self.pack()
