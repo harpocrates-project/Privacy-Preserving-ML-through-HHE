@@ -28,11 +28,58 @@ We use the processed ECG dataset from [this work](https://github.com/SharifAbuad
 
 ## Requirements
 
+### C++ Requirements
 `cpp==11.3.0`  
 `CMAKE>=3.25.1`  
 `SEAL==4.0.0`
 
 The PASTA library for HHE is built upon Microsoft's SEAL library. In this repo, SEAL is already installed in `libs/seal`. If you want to install it somewhere else, please refer to the [SEAL's repo](https://github.com/microsoft/SEAL).
+
+### Python Environment Setup (for notebooks)
+
+This project uses [uv](https://github.com/astral-sh/uv) for Python package management. `uv` is a fast Python package manager written in Rust that replaces pip, pip-tools, pipx, poetry, pyenv, and virtualenv.
+
+#### Installing uv
+
+```bash
+# On macOS and Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or using pip
+pip install uv
+
+# Or using Homebrew
+brew install uv
+```
+
+#### Setting up the Python environment
+
+1. Create a new virtual environment:
+```bash
+uv venv
+```
+
+2. Activate the virtual environment:
+```bash
+# On macOS/Linux
+source .venv/bin/activate
+
+# On Windows
+.venv\Scripts\activate
+```
+
+3. Install Python dependencies:
+```bash
+# Install dependencies for running notebooks
+uv sync
+```
+
+#### Why uv?
+
+- **Fast**: 10-100x faster than pip
+- **Reliable**: Resolution and installation are reproducible
+- **Simple**: Drop-in replacement for pip commands
+- **Efficient**: Caches packages to avoid re-downloading
 
 ## How to run
 
