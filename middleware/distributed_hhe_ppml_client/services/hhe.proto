@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+option objc_class_prefix = "HHE";
+
+package hheproto;
+
+service AnalystService{
+    rpc getPublicKey (Empty) returns (PublicKeyMsg) { }
+    rpc addEncryptedResult(CiphertextResult) returns (Empty) { }
+}
+
+service CSPService{
+    rpc addPublicKeys (PublicKeySetMsg) returns (Empty) { }
+    rpc addEncryptedKeys(EncSymmetricKeysMsg) returns (Empty) { }
+    rpc addEncryptedData(EncSymmetricDataMsg) returns (Empty) { }
+    rpc addMLModel (MLModelMsg) returns (Empty) { }
+    rpc evaluateModel (CiphertextBytes) returns (Empty) { }
+    rpc evaluateModelFromFile (DataFile) returns (Empty) { }
+}
+
+message CiphertextBytes {
+    repeated bytes HHEDecomp = 1;
+    string analystID = 2;
+}
+
+message Empty{ }
+
+message PublicKeyMsg{
+    bytes data = 1;
+    int32 length = 2;
+}
+
+message PublicKeySetMsg {
+    PublicKeyMsg pk = 1;
+    PublicKeyMsg rk = 2;
+    PublicKeyMsg gk = 3;
+    PublicKeyMsg csp_rk = 4;
+    PublicKeyMsg csp_gk = 5;
+    string analystUUID = 6;
+}
+
+message CiphertextResult{
+    repeated CiphertextMsg result = 1;
+}
+
+message CiphertextMsg {
+    bytes data = 1;
+    int32 length = 2;
+}
+
+message MLModelMsg {
+    // CiphertextMsg weights = 1;
+    repeated CiphertextMsg weights = 1;
+}
+
+message EncSymmetricKeysMsg {
+    repeated CiphertextMsg key = 1;
+}
+
+message EncSymmetricDataMsg {
+    repeated EncSymmetricDataRecord record = 1;
+    string patientID= 2;
+}
+
+message EncSymmetricDataRecord {
+    repeated uint64 value = 1;
+}
+
+message DataFile {
+    string filename = 1;
+}
+  

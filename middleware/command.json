@@ -1,0 +1,128 @@
+{
+  "name": "evaluate_model_from_file",
+  "label": "evaluate_model_from_file",
+  "description": "Run distibuted_hhe_ppml_client csp evaluate-model-from-file on scan name",
+  "version": "1.5",
+  "schema-version": "1.0",
+  "image": "distributed_hhe_ppml_client:latest",
+  "type": "docker",
+  "command-line": "./command.sh #SCAN#",
+  "override-entrypoint": true,
+  "mounts": [],
+  "environment-variables": {},
+  "ports": {},
+  "inputs": [
+    {
+      "name": "project",
+      "description": "Input project",
+      "type": "string",
+      "required": true,
+      "replacement-key": "#PROJECT#",
+      "select-values": []
+    },
+    {
+      "name": "subject",
+      "description": "Input subject",
+      "type": "string",
+      "required": true,
+      "replacement-key": "#SUBJECT#",
+      "select-values": []
+    },
+    {
+      "name": "session",
+      "description": "Input session",
+      "type": "string",
+      "required": true,
+      "replacement-key": "#SESSION#",
+      "select-values": []
+    },
+    {
+      "name": "scan",
+      "description": "Input scan",
+      "type": "string",
+      "required": true,
+      "replacement-key": "#SCAN#",
+      "select-values": []
+    }
+  ],
+  "outputs": [],
+  "xnat": [
+    {
+      "name": "evaluate_model_from_file",
+      "label": "evaluate_model_from_file",
+      "description": "Run distibuted_hhe_ppml_client csp evaluate-model-from-file on scan name",
+      "contexts": [
+        "xnat:imageScanData"
+      ],
+      "external-inputs": [
+        {
+          "name": "scan",
+          "description": "Input scan",
+          "type": "Scan",
+          "required": true,
+          "load-children": false
+        }
+      ],
+      "derived-inputs": [
+        {
+          "name": "session",
+          "type": "Session",
+          "required": true,
+          "provides-value-for-command-input": "session",
+          "load-children": false,
+          "derived-from-wrapper-input": "scan",
+          "multiple": false
+        },
+        {
+          "name": "project-id",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "project",
+          "user-settable": false,
+          "load-children": false,
+          "derived-from-wrapper-input": "session",
+          "derived-from-xnat-object-property": "project-id",
+          "multiple": false
+        },
+        {
+          "name": "subject-id",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "subject",
+          "user-settable": false,
+          "load-children": false,
+          "derived-from-wrapper-input": "session",
+          "derived-from-xnat-object-property": "subject-id",
+          "multiple": false
+        },
+        {
+          "name": "session-id",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "session",
+          "user-settable": false,
+          "load-children": false,
+          "derived-from-wrapper-input": "session",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        },
+        {
+          "name": "scan-id",
+          "type": "string",
+          "required": true,
+          "provides-value-for-command-input": "scan",
+          "user-settable": false,
+          "load-children": false,
+          "derived-from-wrapper-input": "scan",
+          "derived-from-xnat-object-property": "id",
+          "multiple": false
+        }
+      ],
+      "output-handlers": []
+    }
+  ],
+  "container-labels": {},
+  "generic-resources": {},
+  "ulimits": {},
+  "secrets": []
+}
