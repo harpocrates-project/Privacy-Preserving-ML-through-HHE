@@ -7,6 +7,7 @@ from matplotlib.widgets import Button
 from tkinter import filedialog
 
 from base import CommandLineWrapper
+from utils import plot_spo2_data
 
 
 class UserWrapper(CommandLineWrapper):
@@ -19,8 +20,9 @@ class UserWrapper(CommandLineWrapper):
         self.spo2_data.trace_add("write", self.on_add_spo2_data)
 
     def on_add_spo2_data(self, *args, **kwargs):
+        file_path = self.spo2_data.get()
         self.update_num_records()
-        self.plot_spo2_data()
+        plot_spo2_data(file_path)
 
     @property
     def terminal_cmd(self):
@@ -62,38 +64,6 @@ class UserWrapper(CommandLineWrapper):
                 self.num_records.set(0)
         else:
             self.num_records.set(0)
-
-    def plot_spo2_data(self):
-        file_path = self.spo2_data.get()
-        samples = []
-        with open(file_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue  # skip empty lines
-                # Convert comma‑separated values to integers
-                segment = [int(val) for val in line.split(',') if val]
-                samples.extend(segment)
-
-        if not samples:
-            raise ValueError("No SpO2 data found in the provided file.")
-
-        data = np.array(samples)
-        # Convert sample indices (seconds) to hours for the x‑axis
-        time_hours = np.arange(len(data)) / 3600.0  # 1 Hz sampling → one sample per second
-
-        plt.figure(figsize=(10, 4))
-        plt.plot(time_hours, data, label='SpO2')
-        plt.xlabel('Time (hours)')
-        plt.ylabel('SpO2 (%)')
-        plt.title('SpO2 Signal')
-        plt.grid(True)
-        plt.legend()
-        plt.tight_layout()
-        axes = plt.axes((0.9, 0.01, 0.05, 0.05))
-        btn_ok = Button(axes, 'OK')
-        btn_ok.on_clicked(lambda *args: plt.close())
-        plt.show()
 
     def create_widgets(self):
         # Parameters frame (Analyst, CSP, SpO2 Data, Number of Records)

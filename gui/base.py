@@ -13,7 +13,13 @@ class CommandLineWrapper(tk.Frame):
     def __init__(self, master=None, default_exe=None):
         super().__init__(master)
         self.executable_path = tk.StringVar(value=default_exe)
-        self.terminal_cmd_template = ["x-terminal-emulator", "-e", "{cmd}"]
+        self.terminal_cmd_template = [
+            "x-terminal-emulator",
+            "-e",
+            "bash",
+            "-c",
+            "{cmd}; echo \"Press Enter to close...\"; read -r",
+        ]
         self.create_widgets()
         self.pack()
 
@@ -55,6 +61,7 @@ class CommandLineWrapper(tk.Frame):
 
     def run_executable(self):
         try:
+            print(' '.join(self.terminal_cmd))
             subprocess.Popen(self.terminal_cmd)
         except Exception as e:
             messagebox.showerror(
