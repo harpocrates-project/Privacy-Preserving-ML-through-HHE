@@ -359,3 +359,5 @@ MigrationBackup/
 notebooks/lightning_logs
 
 libs/pasta3/
+
+.DS_Store
