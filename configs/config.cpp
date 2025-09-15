@@ -63,7 +63,7 @@ namespace config
     std::string dataset_input_path = "";
     std::string dataset_output_path = "";
 
-    std::string save_weight_path = "weights/SpO2/qat/quant_fc_5bits_data_2bits_weights.csv";
+    std::string save_weight_path = "weights/SpO2/qat/quant_fc_5bits_data_3bits_weights.csv";
     std::string save_bias_path = "";
     // --- 2FC Model on MNIST ---
     // std::string dataset_input_path = "data/mnist/2bits_test_mnist_data.csv";
