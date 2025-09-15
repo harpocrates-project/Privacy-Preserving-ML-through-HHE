@@ -109,15 +109,6 @@ else()
   endif()
 endif()
 
-# Fetch and build TBB
-FetchContent_Declare(
-    tbb
-    GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
-    GIT_TAG        v2022.0.0
-)
-
-FetchContent_MakeAvailable(tbb)
-
 # Proto file
 get_filename_component(hhe_proto "${PROJECT_SOURCE_DIR}/protos/hhe.proto" ABSOLUTE)
 get_filename_component(hhe_proto_path "${hhe_proto}" PATH)
@@ -140,6 +131,10 @@ add_custom_command(
 # Include generated *.pb.h files
 include_directories("${PROJECT_SOURCE_DIR}/src/gen_code")
 
+#include_directories(/usr/local/include)
+#include_directories(pasta)
+#include_directories(configs)
+
 # hhe_grpc_proto
 add_library(hhe_grpc_proto
   ${hhe_grpc_srcs}
@@ -150,6 +145,7 @@ target_link_libraries(hhe_grpc_proto
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
+ 
 
 set(ANALYST_SOURCE
     ${SOURCE_DIR}/examples/Analyst/AnalystRPC.cpp
@@ -178,6 +174,8 @@ set(USER_SOURCE
         configs/config.cpp
 )
 
+
+
 set(CSP_SOURCE
     ${SOURCE_DIR}/examples/CSP/CSP.cpp
     ${SOURCE_DIR}/examples/CSP/CSPRPC.cpp
@@ -191,7 +189,9 @@ set(CSP_SOURCE
     configs/config.cpp
 )
 
-add_executable(single_hhe_ppml ${PROJECT_SOURCE})
+
+
+
 
 add_executable(analyst ${ANALYST_SOURCE})
 add_executable(user ${USER_SOURCE}) 
@@ -202,8 +202,6 @@ foreach(LIBRARY ${LIBRARIES})
     message(STATUS "Libraries included: ${LIBRARIES_DIR}/${LIBRARY}")
 endforeach(LIBRARY)
 
-target_link_libraries(single_hhe_ppml ${LIBRARIES})
-target_link_libraries(single_hhe_ppml SEAL::seal)
 
 target_link_libraries(csp
     SEAL::seal
@@ -211,10 +209,10 @@ target_link_libraries(csp
     aes
     pocketnn
     hhe_grpc_proto
-    TBB::tbb
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
     ${_PROTOBUF_LIBPROTOBUF})
+
 
 target_link_libraries(analyst
     SEAL::seal
@@ -235,4 +233,5 @@ target_link_libraries(user
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
     ${_PROTOBUF_LIBPROTOBUF})
+
 
