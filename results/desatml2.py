@@ -9,7 +9,7 @@ import os
 
 def open_hdf_array(filename, variable_name): #Opens given hdf5 file and returns the given variable as a numpy array.
     if not os.path.isfile(filename):
-        raise Exception('Filename: "'+filename+'" not found')        
+        raise Exception('Filename: "'+filename+'" not found')
     #print(' | Opening file: ', filename, ' ,variable: ', variable_name)
     file = h5py.File(filename)
     data = file.get(variable_name)
@@ -40,9 +40,9 @@ class PrintBestEpoch(keras.callbacks.Callback):
 
 #%% Load txt data
 
-labels_binary=np.expand_dims(np.loadtxt('BinaryOutput_SpO2_cleaned4_.txt'),axis=1)
-labels_count=np.expand_dims(np.loadtxt('CountOutput_SpO2_cleaned4_.txt'),axis=1)
-data=np.loadtxt('DataMatrix_SpO2_cleaned4_.txt',delimiter=',')
+labels_binary=np.expand_dims(np.loadtxt('SIESTA_4percent/BinaryOutput_SpO2_cleaned4_.txt'),axis=1)
+labels_count=np.expand_dims(np.loadtxt('SIESTA_4percent/CountOutput_SpO2_cleaned4_.txt'),axis=1)
+data=np.loadtxt('SIESTA_4percent/DataMatrix_SpO2_cleaned4_.txt',delimiter=',')
 
 test_prc=0.1
 num_samples=np.size(labels_binary)
@@ -78,7 +78,7 @@ model_name='b_'
 def m_binary():
     model = keras.Sequential()
     model.add(keras.layers.Dense(30, activation='tanh', input_shape=(300,)))
-    model.add(keras.layers.Dense(10, activation='tanh'))
+    # model.add(keras.layers.Dense(10, activation='tanh'))
     model.add(keras.layers.Dense(2, activation='softmax'))
     optimizer = keras.optimizers.Adam(lrn_rate)
     model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['accuracy'])
@@ -97,11 +97,11 @@ def m_count():
 
 def run_nn(model_curr, train_data_curr, train_labels_curr, model_name_curr, weights_name_curr):
     dt_now=datetime.now()
-    dt_str=dt_now.strftime("%d/%m/%Y %H:%M:%S")    
+    dt_str=dt_now.strftime("%d/%m/%Y %H:%M:%S")
     print('Training started at: '+dt_str+'\n')
-    
-    early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=max_fail) 
-    callbacks = [PrintBestEpoch(), early_stop, keras.callbacks.ModelCheckpoint(filepath=weights_name_curr, monitor='val_loss', save_best_only=True)]  
+
+    early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=max_fail)
+    callbacks = [PrintBestEpoch(), early_stop, keras.callbacks.ModelCheckpoint(filepath=weights_name_curr, monitor='val_loss', save_best_only=True)]
     history = model_curr.fit(train_data_curr, train_labels_curr, epochs=epnum, validation_split=val_split, verbose=1, batch_size=batsz, callbacks=callbacks)
     model_curr.save(model_name_curr)
     return model_curr, history
@@ -147,24 +147,3 @@ eval_accuracy=1-eval_errorprc
 eval_summary={"Accuracy": np.round(eval_accuracy,3),"MAE": np.round(eval_mae,3),"MSE": np.round(eval_mse,3)}
 print('Desaturation count model')
 print(eval_summary)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
