@@ -1,0 +1,5 @@
+(env) cloud@xnat-integration-docker0:/usr/local/share/harpocrates-distributed-hhe-ppml/middleware$ time $(ls /mnt/vol0/distributed_hhe_ppml/csp/ | while read -r f ; do distributed-hhe-ppml-client csp --host 10.254.1.10:50052 evaluate-model-from-file $f ; done)
+
+real    1415m24,546s
+user    1m35,560s
+sys     0m40,240s
