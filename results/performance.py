@@ -158,58 +158,78 @@ def compute_speed_df(sizes_df: pd.DataFrame, times_df: pd.DataFrame) -> pd.DataF
 
 
 def plot_time_comparison(
-    df1: pd.DataFrame,
-    df2: pd.DataFrame,
-    *,
+    *dfs: pd.DataFrame,
     title: str = "Time Comparison",
-    label1: str = "Dataset 1",
-    label2: str = "Dataset 2",
+    labels: list[str] | None = None,
 ) -> None:
     """
-    Plot a side‑by‑side bar chart comparing the average ``real`` time of two
-    upload‑time DataFrames.
+    Plot a side‑by‑side bar chart comparing the average time of an arbitrary
+    number of upload‑time DataFrames.
 
     Parameters
     ----------
-    df1, df2 : pd.DataFrame
-        DataFrames produced by ``load_time_files``.  They must contain a column
-        named ``real`` or, if that column is absent, any numeric column (excluding
-        ``plaintext_id``) will be used as a fallback.
+    *dfs : pd.DataFrame
+        One or more DataFrames produced by ``load_time_files``.  Each must
+        contain a column named ``real`` or, if that column is absent, any numeric
+        column (excluding ``plaintext_id``) will be used as a fallback.
     title : str, optional
         Title of the plot.
-    label1, label2 : str, optional
-        Labels for the two bars (default ``"Dataset 1"`` and ``"Dataset 2"``).
+    labels : list[str], optional
+        Human‑readable labels for the bars.  If omitted, default labels
+        ``["Dataset 1", "Dataset 2", ...]`` are generated.  The length of
+        ``labels`` must match the number of supplied DataFrames.
 
     Returns
     -------
     None
         The function displays the plot using ``matplotlib.pyplot.show``.
     """
-    import pandas as pd
+    import matplotlib.pyplot as plt
+
+    if not dfs:
+        raise ValueError("At least one DataFrame must be provided.")
 
     def _choose_time_column(df: pd.DataFrame) -> str:
         """Return the column name to use for averaging."""
         if "real" in df.columns:
             return "real"
-        # Fallback: first numeric column that is not the identifier
         numeric_cols = df.select_dtypes(include="number").columns.tolist()
         numeric_cols = [c for c in numeric_cols if c != "plaintext_id"]
         if not numeric_cols:
-            raise ValueError("No suitable numeric time column found in the DataFrame.")
+            raise ValueError("No suitable numeric time column found in a DataFrame.")
         return numeric_cols[0]
 
-    time_col1 = _choose_time_column(df1)
-    time_col2 = _choose_time_column(df2)
+    # Determine the column to average for each DataFrame and compute the averages
+    avgs: list[float] = []
+    for df in dfs:
+        time_col = _choose_time_column(df)
+        avgs.append(df[time_col].mean())
 
-    avg1 = df1[time_col1].mean()
-    avg2 = df2[time_col2].mean()
+    # Prepare labels
+    if labels is None:
+        labels = [f"Dataset {i}" for i in range(1, len(dfs) + 1)]
+    else:
+        if len(labels) != len(dfs):
+            raise ValueError(
+                "The number of labels must match the number of DataFrames provided."
+            )
+
+    # Choose colors (default matplotlib tab10 palette)
+    cmap = plt.get_cmap("tab10")
+    colors = [cmap(i) for i in range(len(dfs))]
 
     # Plotting
     fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar([0, 1], [avg1, avg2], color=["tab:blue", "tab:orange"], tick_label=[label1, label2])
+    x_positions = range(len(dfs))
+    bars = ax.bar(
+        x_positions,
+        avgs,
+        color=colors,
+        tick_label=labels,
+    )
 
-    # Annotate bars with the average value (rounded to 2 decimal places)
-    for bar, avg in zip(bars, (avg1, avg2)):
+    # Annotate each bar with its average value (rounded to 2 decimal places)
+    for bar, avg in zip(bars, avgs):
         height = bar.get_height()
         ax.annotate(
             f"{height:.2f}",
@@ -223,34 +243,30 @@ def plot_time_comparison(
 
     ax.set_ylabel("Average Time (seconds)")
     ax.set_title(title)
-    ax.set_ylim(0, max(avg1, avg2) * 1.2)  # give some headroom for the annotations
+    ax.set_ylim(0, max(avgs) * 1.2 if avgs else 1)  # headroom for annotations
     plt.tight_layout()
     plt.show()
 
 
 def plot_speed_comparison(
-    df1: pd.DataFrame,
-    df2: pd.DataFrame,
-    *,
+    *dfs: pd.DataFrame,
     title: str = "Speed Comparison",
-    label1: str = "Dataset 1",
-    label2: str = "Dataset 2",
+    labels: list[str] | None = None,
 ) -> None:
     """
-    Plot a side‑by‑side bar chart comparing the average ``speed_kb_per_s`` of two
-    speed DataFrames.
+    Plot a side‑by‑side bar chart comparing the average ``speed_kb_per_s``
+    of an arbitrary number of speed DataFrames.
 
     Parameters
     ----------
-    df1, df2 : pd.DataFrame
-        DataFrames that contain a ``speed_kb_per_s`` column.  The function
-        computes the mean of this column for each DataFrame and displays the
-        results as two bars.
-
+    *dfs : pd.DataFrame
+        One or more DataFrames that contain a ``speed_kb_per_s`` column.
     title : str, optional
         Title of the plot.
-    label1, label2 : str, optional
-        Labels for the two bars (default ``"Dataset 1"`` and ``"Dataset 2"``).
+    labels : list[str], optional
+        Human‑readable labels for the bars.  If omitted, default labels
+        ``["Dataset 1", "Dataset 2", ...]`` are generated.  The length of
+        ``labels`` must match the number of supplied DataFrames.
 
     Returns
     -------
@@ -259,20 +275,42 @@ def plot_speed_comparison(
     """
     import matplotlib.pyplot as plt
 
-    # Ensure the required column exists
-    if "speed_kb_per_s" not in df1.columns or "speed_kb_per_s" not in df2.columns:
-        raise ValueError("Both DataFrames must contain a 'speed_kb_per_s' column.")
+    if not dfs:
+        raise ValueError("At least one DataFrame must be provided.")
 
-    # Compute the average speed for each DataFrame
-    avg1 = df1["speed_kb_per_s"].mean()
-    avg2 = df2["speed_kb_per_s"].mean()
+    # Validate that every DataFrame contains a ``speed_kb_per_s`` column
+    for i, df in enumerate(dfs, start=1):
+        if "speed_kb_per_s" not in df.columns:
+            raise ValueError(f"DataFrame #{i} does not contain a 'speed_kb_per_s' column.")
+
+    # Compute the average speed for each DataFrame (convert to plain float)
+    avgs: list[float] = [float(df["speed_kb_per_s"].mean()) for df in dfs]
+
+    # Prepare labels
+    if labels is None:
+        labels = [f"Dataset {i}" for i in range(1, len(dfs) + 1)]
+    else:
+        if len(labels) != len(dfs):
+            raise ValueError(
+                "The number of labels must match the number of DataFrames provided."
+            )
+
+    # Choose a color cycle (use the default matplotlib tab10 palette)
+    cmap = plt.get_cmap("tab10")
+    colors = [cmap(i) for i in range(len(dfs))]
 
     # Plotting
     fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar([0, 1], [avg1, avg2], color=["tab:green", "tab:red"], tick_label=[label1, label2])
+    x_positions = range(len(dfs))
+    bars = ax.bar(
+        x_positions,
+        avgs,
+        color=colors,
+        tick_label=labels,
+    )
 
     # Annotate each bar with its average value (rounded to 2 decimal places)
-    for bar, avg in zip(bars, (avg1, avg2)):
+    for bar, avg in zip(bars, avgs):
         height = bar.get_height()
         ax.annotate(
             f"{height:.2f}",
@@ -286,31 +324,31 @@ def plot_speed_comparison(
 
     ax.set_ylabel("Average Speed (KB/s)")
     ax.set_title(title)
-    ax.set_ylim(0, max(avg1, avg2) * 1.2)  # add headroom for annotations
+    ax.set_ylim(0, max(avgs) * 1.2 if avgs else 1)  # add headroom for annotations
     plt.tight_layout()
     plt.show()
 
+
 def plot_storage_comparison(
-    df1: pd.DataFrame,
-    df2: pd.DataFrame,
-    *,
+    *dfs: pd.DataFrame,
     title: str = "Storage Comparison",
-    label1: str = "Dataset 1",
-    label2: str = "Dataset 2",
+    labels: list[str] | None = None,
 ) -> None:
     """
-    Plot a side‑by‑side bar chart comparing the average ``size_kb`` of two
-    size DataFrames.
+    Plot a side‑by‑side bar chart comparing the average ``size_kb`` of an
+    arbitrary number of size DataFrames.
 
     Parameters
     ----------
-    df1, df2 : pd.DataFrame
-        DataFrames produced by ``load_size_file``.  They must contain a
-        ``size_kb`` column.
+    *dfs : pd.DataFrame
+        One or more DataFrames produced by ``load_size_file``.  Each must
+        contain a ``size_kb`` column.
     title : str, optional
         Title of the plot.
-    label1, label2 : str, optional
-        Labels for the two bars (default ``"Dataset 1"`` and ``"Dataset 2"``).
+    labels : list[str], optional
+        Human‑readable labels for the bars.  If omitted, default labels
+        ``["Dataset 1", "Dataset 2", ...]`` are generated.  The length of
+        ``labels`` must match the number of supplied DataFrames.
 
     Returns
     -------
@@ -319,25 +357,42 @@ def plot_storage_comparison(
     """
     import matplotlib.pyplot as plt
 
-    # Validate input DataFrames
-    if "size_kb" not in df1.columns or "size_kb" not in df2.columns:
-        raise ValueError("Both DataFrames must contain a 'size_kb' column.")
+    if not dfs:
+        raise ValueError("At least one DataFrame must be provided.")
 
-    # Compute average sizes
-    avg1 = df1["size_kb"].mean()
-    avg2 = df2["size_kb"].mean()
+    # Validate that every DataFrame contains a ``size_kb`` column
+    for i, df in enumerate(dfs, start=1):
+        if "size_kb" not in df.columns:
+            raise ValueError(f"DataFrame #{i} does not contain a 'size_kb' column.")
+
+    # Compute the average size for each DataFrame
+    avgs: list[float] = [df["size_kb"].mean() for df in dfs]
+
+    # Prepare labels
+    if labels is None:
+        labels = [f"Dataset {i}" for i in range(1, len(dfs) + 1)]
+    else:
+        if len(labels) != len(dfs):
+            raise ValueError(
+                "The number of labels must match the number of DataFrames provided."
+            )
+
+    # Choose a color cycle (use the default matplotlib tab10 palette)
+    cmap = plt.get_cmap("tab10")
+    colors = [cmap(i) for i in range(len(dfs))]
 
     # Plotting
     fig, ax = plt.subplots(figsize=(6, 4))
+    x_positions = range(len(dfs))
     bars = ax.bar(
-        [0, 1],
-        [avg1, avg2],
-        color=["tab:purple", "tab:brown"],
-        tick_label=[label1, label2],
+        x_positions,
+        avgs,
+        color=colors,
+        tick_label=labels,
     )
 
-    # bar with its average value (rounded to 2 decimal places)
-    for bar, avg in zip(bars, (avg1, avg2)):
+    # Annotate each bar with its average value (rounded to 2 decimal places)
+    for bar, avg in zip(bars, avgs):
         height = bar.get_height()
         ax.annotate(
             f"{height:.2f}",
@@ -351,25 +406,139 @@ def plot_storage_comparison(
 
     ax.set_ylabel("Average Size (KB)")
     ax.set_title(title)
-    ax.set_ylim(0, max(avg1, avg2) * 1.2)  # add headroom for annotations
+    # Add some headroom for the annotation text
+    ax.set_ylim(0, max(avgs) * 1.2 if avgs else 1)
+
     plt.tight_layout()
     plt.show()
 
-# Alias to match the typo used later in the script
-plot_speed_comparision = plot_speed_comparison
 
-hhe_sizes = load_size_file('ESADA_4percent/hhe_data.txt')
-plaintext_sizes = load_size_file('ESADA_4percent/plaintext_data.txt')
+def filter_dataframes_to_common_ids(*dfs: pd.DataFrame) -> list[pd.DataFrame]:
+    """
+    Return a list of DataFrames containing only the rows whose ``plaintext_id``
+    appears in **all** supplied DataFrames.
 
-hhe_upload_times = load_time_files('ESADA_4percent/hhe_upload_time')
-plaintext_upload_times = load_time_files('ESADA_4percent/plaintext_upload_time')
+    Parameters
+    ----------
+    *dfs : pd.DataFrame
+        One or more DataFrames that each contain a ``plaintext_id`` column.
 
-hhe_evalulate_time = load_time_files('ESADA_4percent/hhe_evaluate_time')
-plaintext_evalulate_time = load_time_files('ESADA_4percent/plaintext_evaluate_time')
+    Returns
+    -------
+    list[pd.DataFrame]
+        A list with the same length as ``dfs``.  Each element is a copy of the
+        corresponding input DataFrame, filtered to the intersection of
+        ``plaintext_id`` values across all inputs.
 
+    Raises
+    ------
+    ValueError
+        If any supplied DataFrame does not contain a ``plaintext_id`` column.
+    """
+    if not dfs:
+        raise ValueError("At least one DataFrame must be provided.")
+
+    # Verify that every DataFrame has the required column
+    for i, df in enumerate(dfs, start=1):
+        if "plaintext_id" not in df.columns:
+            raise ValueError(f"DataFrame #{i} does not contain a 'plaintext_id' column.")
+
+    # Compute the intersection of all plaintext_id sets
+    common_ids = set(dfs[0]["plaintext_id"].dropna())
+    for df in dfs[1:]:
+        common_ids.intersection_update(df["plaintext_id"].dropna())
+
+    # If there is no common id, return empty DataFrames with the same columns
+    if not common_ids:
+        return [df.iloc[0:0].copy() for df in dfs]
+
+    # Filter each DataFrame to only rows with ids in the intersection
+    filtered_dfs = [
+        df[df["plaintext_id"].isin(common_ids)].reset_index(drop=True).copy()
+        for df in dfs
+    ]
+
+    return filtered_dfs
+
+hhe_2bit_sizes = load_size_file('ESADA_4percent/hhe/2bit/hhe_data.txt')
+hhe_4bit_sizes = load_size_file('ESADA_4percent/hhe/4bit/hhe_data.txt')
+plaintext_sizes = load_size_file('ESADA_4percent/plaintext/plaintext_data.txt')
+
+hhe_2bit_upload_times = load_time_files('ESADA_4percent/hhe/2bit/hhe_upload_time')
+hhe_3bit_upload_times = load_time_files('ESADA_4percent/hhe/3bit/hhe_upload_time')
+hhe_4bit_upload_times = load_time_files('ESADA_4percent/hhe/4bit/hhe_upload_time')
+plaintext_upload_times = load_time_files('ESADA_4percent/plaintext/2layer/plaintext_upload_time')
+
+hhe_2bit_evaluate_time = load_time_files('ESADA_4percent/hhe/2bit/hhe_evaluate_time')
+hhe_3bit_evaluate_time = load_time_files('ESADA_4percent/hhe/3bit/hhe_evaluate_time')
+hhe_4bit_evaluate_time = load_time_files('ESADA_4percent/hhe/4bit/hhe_evaluate_time')
+plaintext_evaluate_time = load_time_files('ESADA_4percent/plaintext/2layer/plaintext_evaluate_time')
+
+(
+    hhe_2bit_sizes,
+    hhe_4bit_sizes,
+    plaintext_sizes,
+    hhe_2bit_upload_times,
+    hhe_3bit_upload_times,
+    hhe_4bit_upload_times,
+    plaintext_upload_times,
+    hhe_2bit_evaluate_time,
+    hhe_3bit_evaluate_time,
+    hhe_4bit_evaluate_time,
+    plaintext_evaluate_time,
+) = filter_dataframes_to_common_ids(
+    hhe_2bit_sizes,
+    hhe_4bit_sizes,
+    plaintext_sizes,
+    hhe_2bit_upload_times,
+    hhe_3bit_upload_times,
+    hhe_4bit_upload_times,
+    plaintext_upload_times,
+    hhe_2bit_evaluate_time,
+    hhe_3bit_evaluate_time,
+    hhe_4bit_evaluate_time,
+    plaintext_evaluate_time,
+)
+
+hhe_2bit_upload_speed = compute_speed_df(plaintext_sizes, hhe_2bit_upload_times)
+hhe_3bit_upload_speed = compute_speed_df(plaintext_sizes, hhe_3bit_upload_times)
+hhe_4bit_upload_speed = compute_speed_df(plaintext_sizes, hhe_4bit_upload_times)
 plaintext_upload_speed = compute_speed_df(plaintext_sizes, plaintext_upload_times)
-hhe_upload_speed = compute_speed_df(plaintext_sizes, hhe_upload_times)
 
-plot_storage_comparison(hhe_sizes, plaintext_sizes, title="Storage Cost", label1="HHE", label2="Plaintext")
-plot_speed_comparision(hhe_upload_speed, plaintext_upload_speed, title="Upload Performance", label1="HHE", label2="Plaintext")
-plot_time_comparison(hhe_evalulate_time, plaintext_evalulate_time, title="Evaluation Performance", label1="HHE", label2="Plaintext")
+
+
+plot_storage_comparison(
+    hhe_2bit_sizes,
+    hhe_4bit_sizes,
+    plaintext_sizes,
+    title="Average Storage Cost per File",
+    labels=["hhe_1layer_2bit", "hhe_1layer_4bit", "plaintext"],
+)
+
+plot_time_comparison(
+    hhe_2bit_upload_times,
+    hhe_3bit_upload_times,
+    hhe_4bit_upload_times,
+    plaintext_upload_times,
+    title="Average Upload Time per File",
+    labels=["hhe_1layer_2bit", "hhe_1layer_3bit", "hhe_1layer_4bit", "plaintext_2layer"],
+)
+
+# Plot upload speed comparison
+plot_speed_comparison(
+    hhe_2bit_upload_speed,
+    hhe_3bit_upload_speed,
+    hhe_4bit_upload_speed,
+    plaintext_upload_speed,
+    title="Average Upload Speed",
+    labels=["hhe_1layer_2bit", "hhe_1layer_3bit", "hhe_1layer_4bit", "plaintext_2layer"],
+)
+
+plot_time_comparison(
+    hhe_2bit_evaluate_time,
+    hhe_3bit_evaluate_time,
+    hhe_4bit_evaluate_time,
+    plaintext_evaluate_time,
+    title="Average Evaluation Time per File",
+    labels=["hhe_1layer_2bit", "hhe_1layer_3bit", "hhe_1layer_4bit", "plaintext_2layer"],
+)
