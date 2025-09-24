@@ -1,0 +1,20 @@
+XNAT_HOST=''
+XNAT_USERNAME=''
+XNAT_PASSWORD=''
+PROJECT=''
+JSESSIONID="$(curl -u ${XNAT_USERNAME}:${XNAT_PASSWORD} -X POST https://${XNAT_HOST}/data/JSESSION)"
+
+put () {
+	curl -X PUT -b "JSESSIONID=${JSESSIONID}" $@
+}
+
+inotifywait -m /mnt/vol0/distributed_hhe_ppml/csp -e create | while read path events file; do
+	SUBJECT=""${file%_*}""
+	SESSION="${file%.*}"
+	SCAN="${SESSION}"
+	put "https://${XNAT_HOST}/data/projects/${PROJECT}/subjects/${SUBJECT}"
+	put "https://${XNAT_HOST}/data/projects/${PROJECT}/subjects/${SUBJECT}/experiments/${SESSION}?xsiType=xnat:otherDicomSessionData"
+	put "https://${XNAT_HOST}/data/projects/${PROJECT}/subjects/${SUBJECT}/experiments/${SESSION}/scans/${SCAN}?xsiType=xnat:otherDicomScanData"
+done
+
+curl -X DELETE -b "JSESSIONID=${JSESSIONID}" "https://${XNAT_HOST}/data/JSESSION"

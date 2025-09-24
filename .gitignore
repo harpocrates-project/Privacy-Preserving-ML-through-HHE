@@ -364,6 +364,13 @@ libs/pasta3/
 *.bin
 
 #analyst output files
-*_hhe_binaryoutput.txt
 .analyst_id
 .analyst_keys
+
+# Docker env file
+.env
+
+# Python virtual env
+env
+
+*.egg-info
