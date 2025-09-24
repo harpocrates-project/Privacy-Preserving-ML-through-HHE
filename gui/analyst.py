@@ -37,6 +37,12 @@ class AnalystWrapper(CommandLineWrapper):
         tk.Entry(param_frame, textvariable=self.csp, width=20).pack(
             side=tk.LEFT, padx=(5, 0)
         )
+
+        # Model
+        tk.Label(param_frame, text="Model:").pack(side=tk.LEFT, padx=(10, 0))
+        tk.Entry(param_frame, width=20).pack(
+            side=tk.LEFT, padx=(5, 0)
+        )
         super().create_widgets()
 
 
