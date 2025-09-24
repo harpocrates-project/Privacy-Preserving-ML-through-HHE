@@ -9,6 +9,8 @@ from sklearn.metrics import (
     f1_score,
 )
 
+import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 16})
 
 def read_output_file(filepath: Path) -> np.ndarray:
     with open(filepath, "r") as f:
@@ -98,9 +100,15 @@ def evaluate_models(prediction_dirs, baseline_dir):
         rec = recall_score(y_true, y_pred, average="binary", zero_division=0)
         f1 = f1_score(y_true, y_pred, average="binary", zero_division=0)
 
+        service =  pred_dir.name.replace('_binaryoutput', '')
+        if service == "plaintext":
+            model_name = service + '/' + pred_dir.parent.name + '/' + 'float'
+        else:
+            model_name = service + '/' + "1layer" + '/' + pred_dir.parent.name
+
         results.append(
             {
-                "model": f"{pred_dir.parent.name}/{pred_dir.name}",
+                "model": model_name,
                 "accuracy": acc,
                 "precision": prec,
                 "recall": rec,
@@ -137,11 +145,11 @@ df_plot = df_results.set_index("model")
 ax = df_plot.plot(kind="bar", figsize=(12, 7))
 
 # Add value labels on each bar
-for container in ax.containers:
-    ax.bar_label(container, fmt="{:.2f}", padding=3)
+#For container in ax.containers:
+#    ax.bar_label(container, fmt="{:.2f}", padding=3, fontsize=16)
 
 # Customize the plot
-ax.set_title("Model Performance Metrics")
+ax.set_title("Model Classification Performance Metrics")
 ax.set_ylabel("Score")
 ax.set_xlabel("")
 ax.set_ylim(0, 1)

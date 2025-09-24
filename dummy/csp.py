@@ -13,7 +13,7 @@ DATA_DIR = os.path.abspath("./dummy/data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # Load model
-_model_path = os.path.abspath("./dummy/siesta_ml_binary.keras")
+_model_path = os.path.abspath("./dummy/siesta_1_layer_ml_binary.keras")
 if not os.path.isfile(_model_path):
     raise FileNotFoundError(f"Model file not found: {_model_path}")
 model = tf.keras.models.load_model(_model_path)

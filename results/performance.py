@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import List, Dict, Any
 
+# Increase default font size for all plot elements
+plt.rcParams.update({'font.size': 16})
+
 def load_time_files(directory: str) -> pd.DataFrame:
     """
     Load all ``.time`` files from ``directory`` into a pandas DataFrame.
@@ -238,7 +241,7 @@ def plot_time_comparison(
             textcoords="offset points",
             ha="center",
             va="bottom",
-            fontsize=10,
+            fontsize=16,
         )
 
     ax.set_ylabel("Average Time (seconds)")
@@ -319,7 +322,7 @@ def plot_speed_comparison(
             textcoords="offset points",
             ha="center",
             va="bottom",
-            fontsize=10,
+            fontsize=16,
         )
 
     ax.set_ylabel("Average Speed (KB/s)")
@@ -401,7 +404,7 @@ def plot_storage_comparison(
             textcoords="offset points",
             ha="center",
             va="bottom",
-            fontsize=10,
+            fontsize=16,
         )
 
     ax.set_ylabel("Average Size (KB)")
@@ -512,7 +515,7 @@ plot_storage_comparison(
     hhe_4bit_sizes,
     plaintext_sizes,
     title="Average Storage Cost per File",
-    labels=["hhe_1layer_2bit", "hhe_1layer_4bit", "plaintext"],
+    labels=["hhe/1layer/2bit", "hhe/1layer/4bit", "plaintext"],
 )
 
 plot_time_comparison(
@@ -521,7 +524,7 @@ plot_time_comparison(
     hhe_4bit_upload_times,
     plaintext_upload_times,
     title="Average Upload Time per File",
-    labels=["hhe_1layer_2bit", "hhe_1layer_3bit", "hhe_1layer_4bit", "plaintext_2layer"],
+    labels=["hhe/1layer/2bit", "hhe/1layer/3bit", "hhe/1layer/4bit", "plaintext/*/*"],
 )
 
 # Plot upload speed comparison
@@ -531,7 +534,7 @@ plot_speed_comparison(
     hhe_4bit_upload_speed,
     plaintext_upload_speed,
     title="Average Upload Speed",
-    labels=["hhe_1layer_2bit", "hhe_1layer_3bit", "hhe_1layer_4bit", "plaintext_2layer"],
+    labels=["hhe/1layer/2bit", "hhe/1layer/3bit", "hhe/1layer/4bit", "plaintext/*/*"],
 )
 
 plot_time_comparison(
@@ -539,6 +542,6 @@ plot_time_comparison(
     hhe_3bit_evaluate_time,
     hhe_4bit_evaluate_time,
     plaintext_evaluate_time,
-    title="Average Evaluation Time per File",
-    labels=["hhe_1layer_2bit", "hhe_1layer_3bit", "hhe_1layer_4bit", "plaintext_2layer"],
+    title="Average Model Evalution Time per File",
+    labels=["hhe/1layer/2bit", "hhe/1layer/3bit", "hhe/1layer/4bit", "plaintext/2layer/float"],
 )
